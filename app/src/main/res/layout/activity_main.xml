@@ -13,4 +13,16 @@
         android:layout_height="wrap_content"
         android:text="Speak"/>
 
+    <Button
+        android:id="@+id/chatbot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chatbot"/>
+
+    <TextView
+        android:id="@+id/chatbot_response"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ChatBot response"/>
+
 </LinearLayout>
