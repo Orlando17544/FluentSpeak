@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.android.fluentspeak.databinding.FragmentConversationBinding
 import java.util.*
 
 class ConversationFragment : Fragment() {
@@ -24,9 +25,13 @@ class ConversationFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_conversation, container, false)
+        val binding = FragmentConversationBinding.inflate(inflater)
 
         viewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
+
+        binding.recordButton.setOnClickListener {
+
+        }
 
 
         textToSpeech = TextToSpeech(this.context, TextToSpeech.OnInitListener { status ->
@@ -64,6 +69,6 @@ class ConversationFragment : Fragment() {
 
          */
 
-        return view
+        return binding.root
     }
 }
