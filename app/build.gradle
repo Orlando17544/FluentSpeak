@@ -29,6 +29,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    namespace 'com.example.android.fluentspeak'
 }
 
 dependencies {
@@ -54,4 +55,6 @@ dependencies {
     implementation "com.squareup.moshi:moshi-kotlin:$version_moshi"
 
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+
+    implementation "org.tensorflow:tensorflow-lite:2.11.0"
 }

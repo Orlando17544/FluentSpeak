@@ -2,7 +2,7 @@ package com.example.android.fluentspeak.network
 
 import com.squareup.moshi.Json
 
-data class RequestData(
+data class ChatBotRequestData(
     @Json(name = "enable_google_results")
     val enableGoogleResults: Boolean?,
 

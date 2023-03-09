@@ -12,7 +12,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 private const val BASE_URL =
-    "https://api.writesonic.com"
+    "https://api.replicate.com"
 
 private val logging: HttpLoggingInterceptor = HttpLoggingInterceptor()
     .setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -31,18 +31,17 @@ private val retrofit = Retrofit.Builder()
     .client(client)
     .build()
 
-interface ChatBotApiService {
+interface WhisperApiService {
     @Headers(
-        "X-API-KEY: 2a40c20f-7a0e-4f35-87b2-912ac6354465",
-        "accept: application/json",
-        "content-type: application/json"
+        "Authorization: Token 3f8c69d078c41c44e1a98629026516f07af2a199",
+        "Content-Type: application/json"
     )
-    @POST("v2/business/content/chatsonic?engine=premium&language=en")
-    fun getResponse(@Body chatBotRequestData: ChatBotRequestData):
+    @POST("v1/predictions")
+    fun getResponse(@Body whisperRequestData: WhisperRequestData):
             Call<ChatBotResponse>
 }
 
-object ChatBotApi {
-    val retrofitService : ChatBotApiService by lazy {
-        retrofit.create(ChatBotApiService::class.java) }
+object WhisperApi {
+    val retrofitService : WhisperApiService by lazy {
+        retrofit.create(WhisperApiService::class.java) }
 }

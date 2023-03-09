@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ConversationFragment"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/speak"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Speak"/>
+
+    <Button
+        android:id="@+id/chatbot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chatbot"/>
+
+    <TextView
+        android:id="@+id/chatbot_response"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ChatBot response"/>
+
+    <Button
+        android:id="@+id/whisper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Whisper"/>
+
+    <TextView
+        android:id="@+id/whisper_response"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Whisper response"/>
+
+</LinearLayout>
