@@ -37,6 +37,8 @@ class ConversationFragment : Fragment() {
             }
         })
 
+        /*
+
         val speak: Button = view.findViewById(R.id.speak)
 
         speak.setOnClickListener {
@@ -58,6 +60,9 @@ class ConversationFragment : Fragment() {
         whisper.setOnClickListener {
 
         }
+
+
+         */
 
         return view
     }
