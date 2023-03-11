@@ -22,7 +22,7 @@
             android:id="@+id/chat_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@+id/record_button"
+            android:layout_above="@+id/button_panel"
             android:orientation="vertical" />
 
         <!--
@@ -59,13 +59,45 @@
 
             -->
 
-        <Button
-            android:id="@+id/record_button"
+        <RelativeLayout
+            android:id="@+id/button_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:icon="@drawable/baseline_mic_24"
-            app:iconGravity="textStart"
-            android:layout_alignParentBottom="true"/>
+            android:layout_alignParentBottom="true">
+
+            <Button
+                android:id="@+id/record_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:icon="@drawable/baseline_mic_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:background="@drawable/round_button"
+                android:layout_alignParentLeft="true"
+                />
+
+            <Button
+                android:id="@+id/stop_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:icon="@drawable/baseline_stop_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:background="@drawable/round_button"
+                android:layout_centerHorizontal="true"
+                android:enabled="false"/>
+
+            <Button
+                android:id="@+id/translate_button"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:icon="@drawable/baseline_translate_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                android:background="@drawable/round_button"
+                android:layout_alignParentRight="true" />
+
+        </RelativeLayout>
 
     </RelativeLayout>
 
