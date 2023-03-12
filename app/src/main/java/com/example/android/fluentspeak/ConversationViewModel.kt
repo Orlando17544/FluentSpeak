@@ -8,29 +8,50 @@ import com.example.android.fluentspeak.network.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
+
 
 class ConversationViewModel: ViewModel() {
-    fun getChatBotResponse(): LiveData<String> {
+    fun getChatBotResponse(filePath: String): LiveData<String> {
         val result = MutableLiveData<String>();
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                ChatBotApi.retrofitService.getResponse(ChatBotRequestData(false, false, "Hello, how are you?")).enqueue(
-                    object: Callback<ChatBotResponse> {
+                val file = File(filePath)
+
+                val filePart: RequestBody = RequestBody.create(
+                    null,
+                    file
+                )
+
+                val modelPart: RequestBody = RequestBody.create(
+                    null,
+                    "whisper-1"
+                )
+
+                /*val filePart: MultipartBody.Part = MultipartBody.Part.createFormData("file", file.getName(), RequestBody.create(
+                    "audio/mpeg", file));
+
+                val textPart: MultipartBody.Part = MultipartBody.Part.createFormData("text", "model", RequestBody.create("text/plain", "whisper-1"))*/
+
+                ChatBotApi.retrofitService.getResponse(filePart, modelPart)?.enqueue(
+                    object: Callback<ChatBotResponse?> {
                         override fun onResponse(
-                            call: Call<ChatBotResponse>,
-                            response: Response<ChatBotResponse>
+                            call: Call<ChatBotResponse?>,
+                            response: Response<ChatBotResponse?>
                         ) {
                             result.value = response.body()?.message
                         }
 
-                        override fun onFailure(call: Call<ChatBotResponse>, t: Throwable) {
+                        override fun onFailure(call: Call<ChatBotResponse?>, t: Throwable) {
                             result.value = t.message
                         }
-
                     }
                 )
             }

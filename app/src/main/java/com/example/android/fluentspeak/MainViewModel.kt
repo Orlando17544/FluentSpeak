@@ -13,13 +13,13 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class MainViewModel : ViewModel() {
-
+/*
     fun getChatBotResponse(): LiveData<String> {
         val result = MutableLiveData<String>();
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                ChatBotApi.retrofitService.getResponse(ChatBotRequestData(false, false, "Hello, how are you?")).enqueue(
+                ChatBotApi.retrofitService.getResponse().enqueue(
                     object: Callback<ChatBotResponse> {
                         override fun onResponse(
                             call: Call<ChatBotResponse>,
@@ -62,5 +62,5 @@ class MainViewModel : ViewModel() {
             }
         }
         return result
-    }
+    }*/
 }
