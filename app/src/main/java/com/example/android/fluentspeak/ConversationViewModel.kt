@@ -18,52 +18,55 @@ import java.io.File
 
 
 class ConversationViewModel: ViewModel() {
-    fun getChatBotResponse(filePath: String): LiveData<String> {
-        val result = MutableLiveData<String>();
+    fun getWhisperResponse(filePath: String): LiveData<WhisperResponse> {
+        val result = MutableLiveData<WhisperResponse>();
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val file = File(filePath)
 
                 val filePart: RequestBody = RequestBody.create(
-                    null,
+                    "audio/aac".toMediaTypeOrNull(),
                     file
                 )
 
                 val modelPart: RequestBody = RequestBody.create(
-                    null,
+                    "text/plain".toMediaTypeOrNull(),
                     "whisper-1"
                 )
 
-                /*val filePart: MultipartBody.Part = MultipartBody.Part.createFormData("file", file.getName(), RequestBody.create(
-                    "audio/mpeg", file));
+                try {
+                    val whisperResponse: WhisperResponse = Api.retrofitService.getWhisperResponse(filePart, modelPart)
 
-                val textPart: MultipartBody.Part = MultipartBody.Part.createFormData("text", "model", RequestBody.create("text/plain", "whisper-1"))*/
-
-                ChatBotApi.retrofitService.getResponse(filePart, modelPart)?.enqueue(
-                    object: Callback<ChatBotResponse?> {
-                        override fun onResponse(
-                            call: Call<ChatBotResponse?>,
-                            response: Response<ChatBotResponse?>
-                        ) {
-                            result.value = response.body()?.message
-                        }
-
-                        override fun onFailure(call: Call<ChatBotResponse?>, t: Throwable) {
-                            result.value = t.message
-                        }
-                    }
-                )
+                    result.postValue(whisperResponse)
+                } catch (e: Exception) {
+                    result.postValue(WhisperResponse("Failure: ${e.message}"))
+                }
             }
         }
         return result
     }
 
-    fun getWhisperResponse(): LiveData<String> {
-        val result = MutableLiveData<String>();
+    fun getChatGPTResponse(): LiveData<Message> {
+        val result = MutableLiveData<Message>();
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
+
+                val messages = mutableListOf(
+                    Message("system", "You are a helpful assistant."),
+                    Message("user", "Who won the world series in 2020?")
+                )
+
+                try {
+                    val chatGPTResponse: ChatGPTResponse = Api.retrofitService.getChatGPTResponse(ChatGPTRequestData("gpt-3.5-turbo", messages))
+
+                    result.postValue(chatGPTResponse.message)
+                } catch (e: Exception) {
+                    result.postValue(Message("exception","Failure: ${e.message}"))
+                }
+
+                /*
                 WhisperApi.retrofitService.getResponse(WhisperRequestData("30414ee7c4fffc37e260fcab7842b5be470b9b840f2b608f5baa9bbef9a259ed", false, "Hello, how are you?")).enqueue(
                     object: Callback<ChatBotResponse> {
                         override fun onResponse(
@@ -78,7 +81,7 @@ class ConversationViewModel: ViewModel() {
                         }
 
                     }
-                )
+                )*/
             }
         }
         return result

@@ -82,8 +82,8 @@ class ConversationFragment : Fragment() {
             when (currentRecordingState) {
                 RECORDING_STATE.START, RECORDING_STATE.PAUSE -> {
                     recorder.stop()
-                    viewModel.getChatBotResponse(recordingCacheFile.absolutePath).observe(viewLifecycleOwner, Observer {
-                        println(it)
+                    viewModel.getWhisperResponse(recordingCacheFile.absolutePath).observe(viewLifecycleOwner, Observer {
+                        println(it.text)
                         println("peso:" + recordingCacheFile.length())
                         println("ruta:" + recordingCacheFile.absolutePath)
                         configureRecorder()

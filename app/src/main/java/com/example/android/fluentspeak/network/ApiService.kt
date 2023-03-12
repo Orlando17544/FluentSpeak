@@ -2,12 +2,10 @@ package com.example.android.fluentspeak.network
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
-import retrofit2.Callback
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.*
@@ -33,32 +31,28 @@ private val retrofit = Retrofit.Builder()
     .client(client)
     .build()
 
-interface ChatBotApiService {
+interface ApiService {
     @Headers(
         "Host: api.openai.com",
         "Authorization: Bearer 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"
     )
     @Multipart
     @POST("v1/audio/transcriptions")
-    fun getResponse(
+    suspend fun getWhisperResponse(
         @Part("file\"; filename=\"recording.m4a\"") file: RequestBody,
         @Part("model") model: RequestBody
-    ): Call<ChatBotResponse?>?
-/*
+    ): WhisperResponse
+
+    @Headers(
+        "Host: api.openai.com",
+        "Authorization: Bearer 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"
+    )
     @Multipart
-    @POST("v1/audio/transcriptions")
-    fun getResponse(
-        @Part filePart: MultipartBody.Part,
-        @Part textPart: MultipartBody.Part
-    ): Call<ChatBotResponse?>?*/
-/*
-    @Multipart
-    @POST("v1/audio/transcriptions")
-    fun getResponse(@Body chatBotRequestData: ChatBotRequestData):
-            Call<ChatBotResponse>*/
+    @POST("v1/chat/completions")
+    suspend fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
 }
 
-object ChatBotApi {
-    val retrofitService : ChatBotApiService by lazy {
-        retrofit.create(ChatBotApiService::class.java) }
+object Api {
+    val retrofitService : ApiService by lazy {
+        retrofit.create(ApiService::class.java) }
 }
