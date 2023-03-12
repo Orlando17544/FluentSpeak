@@ -161,6 +161,16 @@ class ConversationFragment : Fragment() {
                 if (isGranted) {
                     // Permission is granted. Continue the action or workflow in your
                     // app.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        recorder = MediaRecorder(requireContext())
+                        translator = MediaRecorder(requireContext())
+                    } else {
+                        recorder = MediaRecorder()
+                        translator = MediaRecorder()
+                    }
+
+                    configureRecorder()
+                    configureTranslator()
                 } else {
                     // Explain to the user that the feature is unavailable because the
                     // feature requires a permission that the user has denied. At the
@@ -176,12 +186,6 @@ class ConversationFragment : Fragment() {
             }
 
         when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                android.Manifest.permission.RECORD_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // You can use the API that requires the permission.
-            }
             shouldShowRequestPermissionRationale(android.Manifest.permission.RECORD_AUDIO) -> {
                 // In an educational UI, explain to the user why your app requires this
                 // permission for a specific feature to behave as expected, and what
@@ -206,16 +210,25 @@ class ConversationFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            recorder = MediaRecorder(requireContext())
-            translator = MediaRecorder(requireContext())
-        } else {
-            recorder = MediaRecorder()
-            translator = MediaRecorder()
-        }
 
-        configureRecorder()
-        configureTranslator()
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                android.Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // You can use the API that requires the permission.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    recorder = MediaRecorder(requireContext())
+                    translator = MediaRecorder(requireContext())
+                } else {
+                    recorder = MediaRecorder()
+                    translator = MediaRecorder()
+                }
+
+                configureRecorder()
+                configureTranslator()
+            }
+        }
     }
 
     override fun onStop() {
