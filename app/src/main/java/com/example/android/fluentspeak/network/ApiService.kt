@@ -27,6 +27,7 @@ private val moshi = Moshi.Builder()
 
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(MoshiConverterFactory.create(moshi))
+    //.addConverterFactory(GsonConverterFactory.create())
     .baseUrl(BASE_URL)
     .client(client)
     .build()
@@ -38,18 +39,17 @@ interface ApiService {
     )
     @Multipart
     @POST("v1/audio/transcriptions")
+    @JvmSuppressWildcards
     suspend fun getWhisperResponse(
-        @Part("file\"; filename=\"recording.m4a\"") file: RequestBody,
-        @Part("model") model: RequestBody
+        @PartMap whisperParams: Map<String, RequestBody>
     ): WhisperResponse
 
     @Headers(
         "Host: api.openai.com",
         "Authorization: Bearer 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"
     )
-    @Multipart
     @POST("v1/chat/completions")
-    suspend fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
+    suspend fun getChatGPTResponse(@Body chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
 }
 
 object Api {

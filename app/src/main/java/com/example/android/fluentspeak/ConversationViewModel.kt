@@ -1,5 +1,6 @@
 package com.example.android.fluentspeak
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,77 +12,84 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import java.io.File
 
 
-class ConversationViewModel: ViewModel() {
-    fun getWhisperResponse(filePath: String): LiveData<WhisperResponse> {
+class ConversationViewModel : ViewModel() {
+    fun getWhisperResponse(whisperRequestData: WhisperRequestData): LiveData<WhisperResponse> {
         val result = MutableLiveData<WhisperResponse>();
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val file = File(filePath)
+
 
                 val filePart: RequestBody = RequestBody.create(
                     "audio/aac".toMediaTypeOrNull(),
-                    file
+                    whisperRequestData.file
                 )
 
                 val modelPart: RequestBody = RequestBody.create(
                     "text/plain".toMediaTypeOrNull(),
-                    "whisper-1"
+                    whisperRequestData.model
                 )
 
+                val promptPart: RequestBody = RequestBody.create(
+                    "text/plain".toMediaTypeOrNull(),
+                    whisperRequestData.prompt
+                )
+
+                val responseFormatPart: RequestBody = RequestBody.create(
+                    "text/plain".toMediaTypeOrNull(),
+                    whisperRequestData.responseFormat
+                )
+
+                val temperaturePart: RequestBody = RequestBody.create(
+                    "text/plain".toMediaTypeOrNull(),
+                    whisperRequestData.temperature.toString()
+                )
+
+                val languagePart: RequestBody = RequestBody.create(
+                    "text/plain".toMediaTypeOrNull(),
+                    whisperRequestData.language
+                )
+
+                val params: MutableMap<String, RequestBody> = mutableMapOf<String, RequestBody>()
+
+                params.put("file\"; filename=\"recording.m4a\"", filePart)
+                params.put("model", modelPart)
+                params.put("prompt", promptPart)
+                params.put("response_format", responseFormatPart)
+                params.put("temperature", temperaturePart)
+                params.put("language", languagePart)
+
                 try {
-                    val whisperResponse: WhisperResponse = Api.retrofitService.getWhisperResponse(filePart, modelPart)
+                    val whisperResponse: WhisperResponse =
+                        Api.retrofitService.getWhisperResponse(params)
 
                     result.postValue(whisperResponse)
                 } catch (e: Exception) {
-                    result.postValue(WhisperResponse("Failure: ${e.message}"))
+                    //result.postValue(WhisperResponse("Failure: ${e.message}"))
+                    e.message?.let { Log.e("WHISPER_RESPONSE_ERROR", it) }
                 }
             }
         }
         return result
     }
 
-    fun getChatGPTResponse(): LiveData<Message> {
-        val result = MutableLiveData<Message>();
+    fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): LiveData<ChatGPTResponse> {
+        val result = MutableLiveData<ChatGPTResponse>();
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
 
-                val messages = mutableListOf(
-                    Message("system", "You are a helpful assistant."),
-                    Message("user", "Who won the world series in 2020?")
-                )
-
                 try {
-                    val chatGPTResponse: ChatGPTResponse = Api.retrofitService.getChatGPTResponse(ChatGPTRequestData("gpt-3.5-turbo", messages))
+                    val chatGPTResponse: ChatGPTResponse = Api.retrofitService.getChatGPTResponse(chatGPTRequestData)
 
-                    result.postValue(chatGPTResponse.message)
+                    result.postValue(chatGPTResponse)
                 } catch (e: Exception) {
-                    result.postValue(Message("exception","Failure: ${e.message}"))
+                    //result.postValue(Message("exception", "Failure: ${e.message}"))
+                    e.message?.let { Log.e("CHATGPT_RESPONSE_ERROR", it) }
                 }
 
-                /*
-                WhisperApi.retrofitService.getResponse(WhisperRequestData("30414ee7c4fffc37e260fcab7842b5be470b9b840f2b608f5baa9bbef9a259ed", false, "Hello, how are you?")).enqueue(
-                    object: Callback<ChatBotResponse> {
-                        override fun onResponse(
-                            call: Call<ChatBotResponse>,
-                            response: Response<ChatBotResponse>
-                        ) {
-                            result.value = response.body()?.message
-                        }
-
-                        override fun onFailure(call: Call<ChatBotResponse>, t: Throwable) {
-                            result.value = t.message
-                        }
-
-                    }
-                )*/
             }
         }
         return result

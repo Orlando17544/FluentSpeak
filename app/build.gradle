@@ -69,4 +69,6 @@ dependencies {
     def fragment_version = "1.5.5"
 
     implementation "androidx.fragment:fragment-ktx:$fragment_version"
+
+    //implementation 'com.squareup.retrofit2:converter-gson:2.2.0'
 }

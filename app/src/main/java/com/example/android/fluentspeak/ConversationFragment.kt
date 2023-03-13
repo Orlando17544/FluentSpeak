@@ -13,9 +13,14 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
+import com.example.android.fluentspeak.network.ChatGPTRequestData
+import com.example.android.fluentspeak.network.Message
+import com.example.android.fluentspeak.network.WhisperRequestData
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
+import java.util.*
+import kotlin.collections.ArrayList
 
 enum class RECORDING_STATE {
     START, PAUSE, STOP
@@ -23,6 +28,10 @@ enum class RECORDING_STATE {
 
 enum class TRANSLATING_STATE {
     START, STOP
+}
+
+enum class MESSAGE_ROLE(val value: String) {
+    SYSTEM("system"), ASSISTANT("assistant"), USER("user")
 }
 
 class ConversationFragment : Fragment() {
@@ -46,6 +55,8 @@ class ConversationFragment : Fragment() {
         val binding = FragmentConversationBinding.inflate(inflater)
 
         viewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
+
+        ConversationData.addMessage(Message(MESSAGE_ROLE.SYSTEM.value, "You are a helpful assistant."))
 
         binding.recordButton.setOnClickListener {
             when (currentRecordingState) {
@@ -82,10 +93,16 @@ class ConversationFragment : Fragment() {
             when (currentRecordingState) {
                 RECORDING_STATE.START, RECORDING_STATE.PAUSE -> {
                     recorder.stop()
-                    viewModel.getWhisperResponse(recordingCacheFile.absolutePath).observe(viewLifecycleOwner, Observer {
-                        println(it.text)
-                        println("peso:" + recordingCacheFile.length())
-                        println("ruta:" + recordingCacheFile.absolutePath)
+                    viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile)).observe(viewLifecycleOwner, Observer {
+
+                        println("Whisper:" + it.text)
+
+                        ConversationData.addMessage(Message(MESSAGE_ROLE.USER.value, it.text))
+                        val messages = ConversationData.getMessages()
+
+                        viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages)).observe(viewLifecycleOwner, Observer {
+                            println("Contenido:" + it.choices[0].message.content)
+                        })
                         configureRecorder()
                     })
                     it.setEnabled(false)
