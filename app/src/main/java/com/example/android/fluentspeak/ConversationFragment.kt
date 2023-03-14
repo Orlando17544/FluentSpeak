@@ -1,15 +1,16 @@
 package com.example.android.fluentspeak
 
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
@@ -19,8 +20,8 @@ import com.example.android.fluentspeak.network.WhisperRequestData
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
+import java.io.FileOutputStream
 import java.util.*
-import kotlin.collections.ArrayList
 
 enum class RECORDING_STATE {
     START, PAUSE, STOP
@@ -56,9 +57,15 @@ class ConversationFragment : Fragment() {
 
         viewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
 
-        ConversationData.addMessage(Message(MESSAGE_ROLE.SYSTEM.value, "You are a helpful assistant."))
+        ConversationData.addMessage(
+            Message(
+                MESSAGE_ROLE.SYSTEM.value,
+                "You are a helpful assistant."
+            )
+        )
 
         binding.recordButton.setOnClickListener {
+
             when (currentRecordingState) {
                 RECORDING_STATE.START -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -70,6 +77,30 @@ class ConversationFragment : Fragment() {
                     currentRecordingState = RECORDING_STATE.PAUSE
                 }
                 RECORDING_STATE.STOP -> {
+
+
+                    //Prueba
+                    viewModel.getTextToSpeechResponse().observe(viewLifecycleOwner, Observer {
+                        println(it.audioContent)
+
+                        val data: ByteArray =
+                            android.util.Base64.decode(it.audioContent, android.util.Base64.DEFAULT)
+
+                        val file = File.createTempFile("output.mp3", null, context?.cacheDir)
+
+                        val fos: FileOutputStream = FileOutputStream(file)
+                        fos.write(data)
+                        fos.close()
+
+
+                        val mp = MediaPlayer()
+                        mp.setDataSource(file.absolutePath)
+                        mp.prepare()
+                        mp.start()
+                    })
+
+
+
                     recorder.start()
                     (it as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_pause_24, null)
@@ -93,18 +124,20 @@ class ConversationFragment : Fragment() {
             when (currentRecordingState) {
                 RECORDING_STATE.START, RECORDING_STATE.PAUSE -> {
                     recorder.stop()
-                    viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile)).observe(viewLifecycleOwner, Observer {
+                    viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile))
+                        .observe(viewLifecycleOwner, Observer {
 
-                        println("Whisper:" + it.text)
+                            println("Whisper:" + it.text)
 
-                        ConversationData.addMessage(Message(MESSAGE_ROLE.USER.value, it.text))
-                        val messages = ConversationData.getMessages()
+                            ConversationData.addMessage(Message(MESSAGE_ROLE.USER.value, it.text))
+                            val messages = ConversationData.getMessages()
 
-                        viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages)).observe(viewLifecycleOwner, Observer {
-                            println("Contenido:" + it.choices[0].message.content)
+                            viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
+                                .observe(viewLifecycleOwner, Observer {
+                                    println("Contenido:" + it.choices[0].message.content)
+                                })
+                            configureRecorder()
                         })
-                        configureRecorder()
-                    })
                     it.setEnabled(false)
                     (binding.recordButton as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_mic_24, null)
@@ -263,8 +296,8 @@ class ConversationFragment : Fragment() {
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
-            File.createTempFile("recording.m4a", null, context?.cacheDir)
-            recordingCacheFile = File(context?.cacheDir, "recording.m4a")
+            val recordingCacheFile = File.createTempFile("recording.m4a", null, context?.cacheDir)
+            //recordingCacheFile = File(context?.cacheDir, "recording.m4a")
 
             setOutputFile(recordingCacheFile.absolutePath)
 
@@ -278,8 +311,8 @@ class ConversationFragment : Fragment() {
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
-            File.createTempFile("translation.m4a", null, context?.cacheDir)
-            translatingCacheFile = File(context?.cacheDir, "translation.m4a")
+            val translatingCacheFile = File.createTempFile("translation.m4a", null, context?.cacheDir)
+            //translatingCacheFile = File(context?.cacheDir, "translation.m4a")
 
             setOutputFile(translatingCacheFile.absolutePath)
 

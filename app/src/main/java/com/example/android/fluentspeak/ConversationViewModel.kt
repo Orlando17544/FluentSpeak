@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import org.w3c.dom.Text
 
 
 class ConversationViewModel : ViewModel() {
@@ -63,7 +64,7 @@ class ConversationViewModel : ViewModel() {
 
                 try {
                     val whisperResponse: WhisperResponse =
-                        Api.retrofitService.getWhisperResponse(params)
+                        OpenAIApi.retrofitService.getWhisperResponse(params)
 
                     result.postValue(whisperResponse)
                 } catch (e: Exception) {
@@ -82,7 +83,7 @@ class ConversationViewModel : ViewModel() {
             withContext(Dispatchers.IO) {
 
                 try {
-                    val chatGPTResponse: ChatGPTResponse = Api.retrofitService.getChatGPTResponse(chatGPTRequestData)
+                    val chatGPTResponse: ChatGPTResponse = OpenAIApi.retrofitService.getChatGPTResponse(chatGPTRequestData)
 
                     result.postValue(chatGPTResponse)
                 } catch (e: Exception) {
@@ -94,4 +95,32 @@ class ConversationViewModel : ViewModel() {
         }
         return result
     }
+
+    fun getTextToSpeechResponse(): LiveData<TextToSpeechResponse> {
+        val result = MutableLiveData<TextToSpeechResponse>();
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+
+                try {
+
+                    val textToSpeechRequestData = TextToSpeechRequestData(
+                        Input("Hello, how are you?"),
+                        Voice("en-gb", "en-GB-Standard-A", "FEMALE"),
+                        AudioConfig("MP3")
+                    )
+
+                    val textToSpeechResponse: TextToSpeechResponse = GoogleCloudApi.retrofitService.getTextToSpeechResponse(textToSpeechRequestData)
+
+                    result.postValue(textToSpeechResponse)
+                } catch (e: Exception) {
+                    //result.postValue(Message("exception", "Failure: ${e.message}"))
+                    e.message?.let { Log.e("SPEECH_RESPONSE_ERROR", it) }
+                }
+
+            }
+        }
+        return result
+    }
+
 }

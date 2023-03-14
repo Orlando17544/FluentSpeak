@@ -5,7 +5,6 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.*
@@ -27,12 +26,11 @@ private val moshi = Moshi.Builder()
 
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(MoshiConverterFactory.create(moshi))
-    //.addConverterFactory(GsonConverterFactory.create())
     .baseUrl(BASE_URL)
     .client(client)
     .build()
 
-interface ApiService {
+interface OpenAIApiService {
     @Headers(
         "Host: api.openai.com",
         "Authorization: Bearer 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"
@@ -52,7 +50,7 @@ interface ApiService {
     suspend fun getChatGPTResponse(@Body chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
 }
 
-object Api {
-    val retrofitService : ApiService by lazy {
-        retrofit.create(ApiService::class.java) }
+object OpenAIApi {
+    val retrofitService : OpenAIApiService by lazy {
+        retrofit.create(OpenAIApiService::class.java) }
 }
