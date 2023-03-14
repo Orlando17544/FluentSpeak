@@ -1,13 +1,16 @@
 package com.example.android.fluentspeak
 
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -68,9 +71,23 @@ class ConversationFragment : Fragment() {
 
             when (currentRecordingState) {
                 RECORDING_STATE.START -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        recorder.pause()
-                    }
+                    recorder.stop()
+                    viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile))
+                        .observe(viewLifecycleOwner, Observer {
+                            configureRecorder()
+
+                            val message = Message(MESSAGE_ROLE.USER.value, it.text)
+
+                            val messageView = TextView(context)
+
+                            messageView.text = message.content
+
+                            if (message.role.equals(MESSAGE_ROLE.USER)) {
+                                messageView.setBackgroundColor(Color.parseColor("#000000"))
+                            }
+
+                            binding.messagesLayout.addView(messageView)
+                        })
                     (it as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_play_arrow_24, null)
                     binding.translateButton.setEnabled(true)
@@ -78,7 +95,7 @@ class ConversationFragment : Fragment() {
                 }
                 RECORDING_STATE.STOP -> {
 
-
+                    /*
                     //Prueba
                     viewModel.getTextToSpeechResponse().observe(viewLifecycleOwner, Observer {
                         println(it.audioContent)
@@ -98,7 +115,7 @@ class ConversationFragment : Fragment() {
                         mp.prepare()
                         mp.start()
                     })
-
+                    */
 
 
                     recorder.start()
@@ -109,9 +126,11 @@ class ConversationFragment : Fragment() {
                     currentRecordingState = RECORDING_STATE.START
                 }
                 RECORDING_STATE.PAUSE -> {
+                    recorder.start()
+                    /*
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         recorder.resume()
-                    }
+                    }*/
                     (it as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_pause_24, null)
                     binding.translateButton.setEnabled(false)
@@ -135,6 +154,7 @@ class ConversationFragment : Fragment() {
                             viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
                                 .observe(viewLifecycleOwner, Observer {
                                     println("Contenido:" + it.choices[0].message.content)
+
                                 })
                             configureRecorder()
                         })
@@ -296,7 +316,7 @@ class ConversationFragment : Fragment() {
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
-            val recordingCacheFile = File.createTempFile("recording.m4a", null, context?.cacheDir)
+            recordingCacheFile = File.createTempFile("recording.m4a", null, context?.cacheDir)
             //recordingCacheFile = File(context?.cacheDir, "recording.m4a")
 
             setOutputFile(recordingCacheFile.absolutePath)
@@ -311,7 +331,7 @@ class ConversationFragment : Fragment() {
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
-            val translatingCacheFile = File.createTempFile("translation.m4a", null, context?.cacheDir)
+            translatingCacheFile = File.createTempFile("translation.m4a", null, context?.cacheDir)
             //translatingCacheFile = File(context?.cacheDir, "translation.m4a")
 
             setOutputFile(translatingCacheFile.absolutePath)
