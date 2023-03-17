@@ -96,7 +96,7 @@ class ConversationViewModel : ViewModel() {
         return result
     }
 
-    fun getTextToSpeechResponse(): LiveData<TextToSpeechResponse> {
+    fun getTextToSpeechResponse(textToSpeechRequestData: TextToSpeechRequestData): LiveData<TextToSpeechResponse> {
         val result = MutableLiveData<TextToSpeechResponse>();
 
         viewModelScope.launch {
@@ -122,5 +122,4 @@ class ConversationViewModel : ViewModel() {
         }
         return result
     }
-
 }

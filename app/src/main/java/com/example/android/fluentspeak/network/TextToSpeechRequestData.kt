@@ -5,8 +5,8 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class TextToSpeechRequestData(
     val input: Input,
-    val voice: Voice,
-    val audioConfig: AudioConfig
+    val voice: Voice = Voice(),
+    val audioConfig: AudioConfig = AudioConfig()
 )
 
 @JsonClass(generateAdapter = true)
@@ -16,12 +16,12 @@ data class Input(
 
 @JsonClass(generateAdapter = true)
 data class Voice(
-    val languageCode: String,
-    val name: String,
-    val ssmlGender: String
+    val languageCode: String = "en-IN",
+    val name: String = "en-IN-Standard-A",
+    val ssmlGender: String = "FEMALE"
 )
 
 @JsonClass(generateAdapter = true)
 data class AudioConfig(
-    val audioEncoding: String
+    val audioEncoding: String = "MP3"
 )
