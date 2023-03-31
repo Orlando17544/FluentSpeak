@@ -16,110 +16,86 @@ import org.w3c.dom.Text
 
 
 class ConversationViewModel : ViewModel() {
-    fun getWhisperResponse(whisperRequestData: WhisperRequestData): LiveData<WhisperResponse> {
-        val result = MutableLiveData<WhisperResponse>();
+    suspend fun getWhisperResponse(whisperRequestData: WhisperRequestData): WhisperResponse {
+        val filePart: RequestBody = RequestBody.create(
+            "audio/aac".toMediaTypeOrNull(),
+            whisperRequestData.file
+        )
 
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+        val modelPart: RequestBody = RequestBody.create(
+            "text/plain".toMediaTypeOrNull(),
+            whisperRequestData.model
+        )
 
+        val promptPart: RequestBody = RequestBody.create(
+            "text/plain".toMediaTypeOrNull(),
+            whisperRequestData.prompt
+        )
 
-                val filePart: RequestBody = RequestBody.create(
-                    "audio/aac".toMediaTypeOrNull(),
-                    whisperRequestData.file
-                )
+        val responseFormatPart: RequestBody = RequestBody.create(
+            "text/plain".toMediaTypeOrNull(),
+            whisperRequestData.responseFormat
+        )
 
-                val modelPart: RequestBody = RequestBody.create(
-                    "text/plain".toMediaTypeOrNull(),
-                    whisperRequestData.model
-                )
+        val temperaturePart: RequestBody = RequestBody.create(
+            "text/plain".toMediaTypeOrNull(),
+            whisperRequestData.temperature.toString()
+        )
 
-                val promptPart: RequestBody = RequestBody.create(
-                    "text/plain".toMediaTypeOrNull(),
-                    whisperRequestData.prompt
-                )
+        val languagePart: RequestBody = RequestBody.create(
+            "text/plain".toMediaTypeOrNull(),
+            whisperRequestData.language
+        )
 
-                val responseFormatPart: RequestBody = RequestBody.create(
-                    "text/plain".toMediaTypeOrNull(),
-                    whisperRequestData.responseFormat
-                )
+        val params: MutableMap<String, RequestBody> = mutableMapOf<String, RequestBody>()
 
-                val temperaturePart: RequestBody = RequestBody.create(
-                    "text/plain".toMediaTypeOrNull(),
-                    whisperRequestData.temperature.toString()
-                )
+        params.put("file\"; filename=\"recording.m4a\"", filePart)
+        params.put("model", modelPart)
+        params.put("prompt", promptPart)
+        params.put("response_format", responseFormatPart)
+        params.put("temperature", temperaturePart)
+        params.put("language", languagePart)
 
-                val languagePart: RequestBody = RequestBody.create(
-                    "text/plain".toMediaTypeOrNull(),
-                    whisperRequestData.language
-                )
+        var whisperResponse: WhisperResponse? = null
 
-                val params: MutableMap<String, RequestBody> = mutableMapOf<String, RequestBody>()
-
-                params.put("file\"; filename=\"recording.m4a\"", filePart)
-                params.put("model", modelPart)
-                params.put("prompt", promptPart)
-                params.put("response_format", responseFormatPart)
-                params.put("temperature", temperaturePart)
-                params.put("language", languagePart)
-
-                try {
-                    val whisperResponse: WhisperResponse =
-                        OpenAIApi.retrofitService.getWhisperResponse(params)
-
-                    result.postValue(whisperResponse)
-                } catch (e: Exception) {
-                    //result.postValue(WhisperResponse("Failure: ${e.message}"))
-                    e.message?.let { Log.e("WHISPER_RESPONSE_ERROR", it) }
-                }
-            }
+        try {
+            whisperResponse = OpenAIApi.retrofitService.getWhisperResponse(params)
+        } catch (e: Exception) {
+            e.message?.let { Log.e("WHISPER_RESPONSE_ERROR", it) }
         }
-        return result
+
+        return whisperResponse ?: WhisperResponse("")
     }
 
-    fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): LiveData<ChatGPTResponse> {
-        val result = MutableLiveData<ChatGPTResponse>();
+    suspend fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse {
+        var chatGPTResponse: ChatGPTResponse? = null
 
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
-                try {
-                    val chatGPTResponse: ChatGPTResponse = OpenAIApi.retrofitService.getChatGPTResponse(chatGPTRequestData)
-
-                    result.postValue(chatGPTResponse)
-                } catch (e: Exception) {
-                    //result.postValue(Message("exception", "Failure: ${e.message}"))
-                    e.message?.let { Log.e("CHATGPT_RESPONSE_ERROR", it) }
-                }
-
-            }
+        try {
+            chatGPTResponse = OpenAIApi.retrofitService.getChatGPTResponse(chatGPTRequestData)
+        } catch (e: Exception) {
+            e.message?.let { Log.e("CHATGPT_RESPONSE_ERROR", it) }
         }
-        return result
+
+        return chatGPTResponse ?: ChatGPTResponse("", "", 0, listOf<Choice>(), Usage(0, 0, 0))
     }
 
-    fun getTextToSpeechResponse(textToSpeechRequestData: TextToSpeechRequestData): LiveData<TextToSpeechResponse> {
-        val result = MutableLiveData<TextToSpeechResponse>();
+    suspend fun getTextToSpeechResponse(textToSpeechRequestData: TextToSpeechRequestData): TextToSpeechResponse {
+        var textToSpeechResponse: TextToSpeechResponse? = null
 
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+        try {
+            val textToSpeechRequestData = TextToSpeechRequestData(
+                Input("Hello, how are you?"),
+                Voice("en-gb", "en-GB-Standard-A", "FEMALE"),
+                AudioConfig("MP3")
+            )
 
-                try {
-
-                    val textToSpeechRequestData = TextToSpeechRequestData(
-                        Input("Hello, how are you?"),
-                        Voice("en-gb", "en-GB-Standard-A", "FEMALE"),
-                        AudioConfig("MP3")
-                    )
-
-                    val textToSpeechResponse: TextToSpeechResponse = GoogleCloudApi.retrofitService.getTextToSpeechResponse(textToSpeechRequestData)
-
-                    result.postValue(textToSpeechResponse)
-                } catch (e: Exception) {
-                    //result.postValue(Message("exception", "Failure: ${e.message}"))
-                    e.message?.let { Log.e("SPEECH_RESPONSE_ERROR", it) }
-                }
-
-            }
+            textToSpeechResponse =
+                GoogleCloudApi.retrofitService.getTextToSpeechResponse(textToSpeechRequestData)
+        } catch (e: Exception) {
+            //result.postValue(Message("exception", "Failure: ${e.message}"))
+            e.message?.let { Log.e("SPEECH_RESPONSE_ERROR", it) }
         }
-        return result
+
+        return textToSpeechResponse ?: TextToSpeechResponse("")
     }
 }

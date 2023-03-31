@@ -33,7 +33,7 @@ private val retrofit = Retrofit.Builder()
 interface OpenAIApiService {
     @Headers(
         "Host: api.openai.com",
-        "Authorization: Bearer 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"
+        "Authorization: Bearer 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"
     )
     @Multipart
     @POST("v1/audio/transcriptions")
@@ -44,7 +44,7 @@ interface OpenAIApiService {
 
     @Headers(
         "Host: api.openai.com",
-        "Authorization: Bearer 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"
+        "Authorization: Bearer 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"
     )
     @POST("v1/chat/completions")
     suspend fun getChatGPTResponse(@Body chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse

@@ -19,10 +19,15 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
 import com.example.android.fluentspeak.network.*
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -78,28 +83,32 @@ class ConversationFragment : Fragment() {
 
         addMessageView(message)
 
+        setupObservers(binding)
 
+        return binding.root
+    }
+
+    fun setupObservers(binding: FragmentConversationBinding) {
         binding.recordButton.setOnClickListener {
 
             when (currentRecordingState) {
                 RECORDING_STATE.START -> {
                     recorder?.stop()
-                    viewModel.getWhisperResponse(
-                        WhisperRequestData(
-                            file = recordingCacheFile,
-                            prompt = userMessage.content
-                        )
-                    )
-                        .observe(viewLifecycleOwner, Observer {
-                            configureRecorder()
 
-                            val tempUserMessage = Message(MESSAGE_ROLE.USER.value, it.text.trim())
+                    lifecycleScope.launch {
+                        val whisperResponse = withContext(Dispatchers.IO) {
+                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = userMessage.content))
+                        }
 
-                            userMessage.content += " " + tempUserMessage.content
-                            userMessage.content.trim()
+                        configureRecorder()
 
-                            addMessageView(tempUserMessage)
-                        })
+                        val tempUserMessage = Message(MESSAGE_ROLE.USER.value, whisperResponse.text.trim())
+
+                        userMessage.content += " " + tempUserMessage.content
+                        userMessage.content.trim()
+
+                        addMessageView(tempUserMessage)
+                    }
                     (it as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_play_arrow_24, null)
                     binding.translateButton.setEnabled(true)
@@ -120,7 +129,6 @@ class ConversationFragment : Fragment() {
                     binding.translateButton.setEnabled(false)
                     currentRecordingState = RECORDING_STATE.START
                 }
-
             }
         }
 
@@ -128,78 +136,70 @@ class ConversationFragment : Fragment() {
             when (currentRecordingState) {
                 RECORDING_STATE.START -> {
                     recorder?.stop()
+                    lifecycleScope.launch {
+                        val whisperResponse = withContext(Dispatchers.IO) {
+                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = userMessage.content))
+                        }
 
-                    viewModel.getWhisperResponse(
-                        WhisperRequestData(
-                            file = recordingCacheFile,
-                            prompt = userMessage.content
-                        )
-                    )
-                        .observe(viewLifecycleOwner, Observer {
-                            configureRecorder()
+                        configureRecorder()
 
-                            val tempUserMessage = Message(MESSAGE_ROLE.USER.value, it.text.trim())
+                        val tempUserMessage = Message(MESSAGE_ROLE.USER.value, whisperResponse.text.trim())
 
-                            userMessage.content += " " + tempUserMessage.content
-                            userMessage.content.trim()
+                        userMessage.content += " " + tempUserMessage.content
+                        userMessage.content.trim()
 
-                            addMessageView(tempUserMessage)
+                        addMessageView(tempUserMessage)
 
 
-                            ConversationData.addMessage(
-                                Message(
-                                    MESSAGE_ROLE.USER.value,
-                                    userMessage.content
-                                )
+                        ConversationData.addMessage(
+                            Message(
+                                MESSAGE_ROLE.USER.value,
+                                userMessage.content
                             )
-                            userMessage.content = ""
+                        )
+                        userMessage.content = ""
 
-                            val messages = ConversationData.getMessages()
+                        val messages = ConversationData.getMessages()
 
+                        val chatGPTResponse = withContext(Dispatchers.IO) {
                             viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
-                                .observe(viewLifecycleOwner, Observer {
-                                    println("Contenido:" + it.choices[0].message.content)
+                        }
 
-                                    val chatGPTMessage = Message(
-                                        MESSAGE_ROLE.ASSISTANT.value,
-                                        it.choices[0].message.content
-                                    )
+                        println("Contenido:" + chatGPTResponse.choices[0].message.content)
 
-                                    ConversationData.addMessage(chatGPTMessage)
+                        val chatGPTMessage = Message(
+                            MESSAGE_ROLE.ASSISTANT.value,
+                            chatGPTResponse.choices[0].message.content
+                        )
 
-                                    addMessageView(chatGPTMessage)
+                        ConversationData.addMessage(chatGPTMessage)
 
-                                    viewModel.getTextToSpeechResponse(
-                                        TextToSpeechRequestData(
-                                            Input(
-                                                chatGPTMessage.content
-                                            )
-                                        )
-                                    )
-                                        .observe(viewLifecycleOwner, Observer {
-                                            println(it.audioContent)
+                        addMessageView(chatGPTMessage)
 
-                                            val dataDecoded: ByteArray =
-                                                android.util.Base64.decode(
-                                                    it.audioContent,
-                                                    android.util.Base64.DEFAULT
-                                                )
+                        val textToSpeechResponse = withContext(Dispatchers.IO) {
+                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatGPTMessage.content)))
+                        }
 
-                                            val fos =
-                                                FileOutputStream(syntheticCacheFile)
-                                            fos.write(dataDecoded)
-                                            fos.close()
+                        println(textToSpeechResponse.audioContent)
 
-                                            configurePlayer()
+                        val dataDecoded: ByteArray =
+                            android.util.Base64.decode(
+                                textToSpeechResponse.audioContent,
+                                android.util.Base64.DEFAULT
+                            )
 
-                                            mediaPlayer?.start()
-                                            mediaPlayer?.setOnCompletionListener {
-                                                mediaPlayer?.reset()
-                                            }
-                                        })
-                                })
+                        val fos =
+                            FileOutputStream(syntheticCacheFile)
+                        fos.write(dataDecoded)
+                        fos.close()
 
-                        })
+                        configurePlayer()
+
+                        mediaPlayer?.start()
+                        mediaPlayer?.setOnCompletionListener {
+                            mediaPlayer?.reset()
+                        }
+                    }
                     it.setEnabled(false)
                     (binding.recordButton as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_mic_24, null)
@@ -223,48 +223,46 @@ class ConversationFragment : Fragment() {
 
                     val messages = ConversationData.getMessages()
 
-                    viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
-                        .observe(viewLifecycleOwner, Observer {
-                            println("Contenido:" + it.choices[0].message.content)
+                    lifecycleScope.launch {
+                        val chatGPTResponse = withContext(Dispatchers.IO) {
+                            viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
+                        }
 
-                            val chatGPTMessage = Message(
-                                MESSAGE_ROLE.ASSISTANT.value,
-                                it.choices[0].message.content
+                        println("Contenido:" + chatGPTResponse.choices[0].message.content)
+
+                        val chatGPTMessage = Message(
+                            MESSAGE_ROLE.ASSISTANT.value,
+                            chatGPTResponse.choices[0].message.content
+                        )
+
+                        ConversationData.addMessage(chatGPTMessage)
+
+                        addMessageView(chatGPTMessage)
+
+                        val textToSpeechResponse = withContext(Dispatchers.IO) {
+                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatGPTMessage.content)))
+                        }
+
+                        println(textToSpeechResponse.audioContent)
+
+                        val dataDecoded: ByteArray =
+                            android.util.Base64.decode(
+                                textToSpeechResponse.audioContent,
+                                android.util.Base64.DEFAULT
                             )
 
-                            ConversationData.addMessage(chatGPTMessage)
+                        val fos =
+                            FileOutputStream(syntheticCacheFile)
+                        fos.write(dataDecoded)
+                        fos.close()
 
-                            addMessageView(chatGPTMessage)
+                        configurePlayer()
 
-                            viewModel.getTextToSpeechResponse(
-                                TextToSpeechRequestData(
-                                    Input(
-                                        chatGPTMessage.content
-                                    )
-                                )
-                            )
-                                .observe(viewLifecycleOwner, Observer {
-                                    println(it.audioContent)
-
-                                    val dataDecoded: ByteArray =
-                                        android.util.Base64.decode(
-                                            it.audioContent,
-                                            android.util.Base64.DEFAULT
-                                        )
-
-                                    val fos =
-                                        FileOutputStream(syntheticCacheFile)
-                                    fos.write(dataDecoded)
-                                    fos.close()
-
-                                    configurePlayer()
-
-                                    mediaPlayer?.start()
-                                    mediaPlayer?.setOnCompletionListener {
-                                        mediaPlayer?.reset()
-                                    }
-                                })
-                        })
+                        mediaPlayer?.start()
+                        mediaPlayer?.setOnCompletionListener {
+                            mediaPlayer?.reset()
+                        }
+                    }
                     currentRecordingState = RECORDING_STATE.STOP
                 }
             }
@@ -318,9 +316,6 @@ class ConversationFragment : Fragment() {
                 }
             }
         }
-
-
-        return binding.root
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
