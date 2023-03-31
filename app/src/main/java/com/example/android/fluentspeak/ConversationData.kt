@@ -4,7 +4,7 @@ import com.example.android.fluentspeak.network.Message
 import java.util.*
 
 object ConversationData {
-    private val messages: MutableList<Message> = mutableListOf()
+    public val messages: MutableList<Message> = mutableListOf()
 
     fun addMessage(message: Message) {
         if (messages.size.equals(5)) {
@@ -13,9 +13,5 @@ object ConversationData {
         }
 
         messages.add(message)
-    }
-
-    fun getMessages(): MutableList<Message> {
-        return messages
     }
 }
