@@ -16,6 +16,13 @@ import org.w3c.dom.Text
 
 
 class ConversationViewModel : ViewModel() {
+    var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER.value, "")
+
+    fun addMessageToUnfinishedUserMessage(userMessagePortion: Message) {
+        unfinishedUserMessage.content += " " + userMessagePortion.content
+        unfinishedUserMessage.content = unfinishedUserMessage.content.trim()
+    }
+
     suspend fun getWhisperResponse(whisperRequestData: WhisperRequestData): WhisperResponse {
         val filePart: RequestBody = RequestBody.create(
             "audio/aac".toMediaTypeOrNull(),

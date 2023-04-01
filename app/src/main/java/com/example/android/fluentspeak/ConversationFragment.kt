@@ -63,8 +63,6 @@ class ConversationFragment : Fragment() {
 
     private lateinit var chatLayout: LinearLayout
 
-    private var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER.value, "")
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -97,14 +95,14 @@ class ConversationFragment : Fragment() {
 
                     lifecycleScope.launch {
                         val whisperResponse = withContext(Dispatchers.IO) {
-                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = unfinishedUserMessage.content))
+                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
                         }
 
                         configureRecorder()
 
                         val userMessagePortion = Message(MESSAGE_ROLE.USER.value, whisperResponse.text.trim())
 
-                        addMessageToUnfinishedUserMessage(userMessagePortion)
+                        viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
                     }
@@ -137,18 +135,18 @@ class ConversationFragment : Fragment() {
                     recorder?.stop()
                     lifecycleScope.launch {
                         val whisperResponse = withContext(Dispatchers.IO) {
-                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = unfinishedUserMessage.content))
+                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
                         }
 
                         configureRecorder()
 
                         val userMessagePortion = Message(MESSAGE_ROLE.USER.value, whisperResponse.text.trim())
 
-                        addMessageToUnfinishedUserMessage(userMessagePortion)
+                        viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
 
-                        addMessageToConversationData(Message(MESSAGE_ROLE.USER.value, unfinishedUserMessage.content))
+                        addMessageToConversationData(Message(MESSAGE_ROLE.USER.value, viewModel.unfinishedUserMessage.content))
                         cleanUnfinishedUserMessage()
 
                         val messages = ConversationData.messages
@@ -195,7 +193,7 @@ class ConversationFragment : Fragment() {
 
                     configureRecorder()
 
-                    addMessageToConversationData(Message(MESSAGE_ROLE.USER.value, unfinishedUserMessage.content))
+                    addMessageToConversationData(Message(MESSAGE_ROLE.USER.value, viewModel.unfinishedUserMessage.content))
                     cleanUnfinishedUserMessage()
 
                     val messages = ConversationData.messages
@@ -430,13 +428,8 @@ class ConversationFragment : Fragment() {
         }
     }
 
-    private fun addMessageToUnfinishedUserMessage(userMessagePortion: Message) {
-        unfinishedUserMessage.content += " " + userMessagePortion.content
-        unfinishedUserMessage.content.trim()
-    }
-
     private fun cleanUnfinishedUserMessage() {
-        unfinishedUserMessage.content = ""
+        viewModel.unfinishedUserMessage.content = ""
     }
 
     private fun addMessageToConversationData(message: Message) {
