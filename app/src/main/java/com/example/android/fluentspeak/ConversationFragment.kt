@@ -41,8 +41,8 @@ enum class TRANSLATING_STATE {
     START, STOP
 }
 
-enum class MESSAGE_ROLE(val value: String) {
-    SYSTEM("system"), ASSISTANT("assistant"), USER("user")
+enum class MESSAGE_ROLE {
+    SYSTEM, ASSISTANT, USER
 }
 
 class ConversationFragment : Fragment() {
@@ -75,7 +75,7 @@ class ConversationFragment : Fragment() {
         chatLayout = binding.chatLayout
 
 
-        val message = Message(MESSAGE_ROLE.SYSTEM.value, "You are a helpful assistant.")
+        val message = Message(MESSAGE_ROLE.SYSTEM, "You are a helpful assistant.")
 
         addMessageToConversationData(message)
 
@@ -100,7 +100,7 @@ class ConversationFragment : Fragment() {
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER.value, whisperResponse.text.trim())
+                        val userMessagePortion = Message(MESSAGE_ROLE.USER, whisperResponse.text.trim())
 
                         viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
@@ -140,13 +140,13 @@ class ConversationFragment : Fragment() {
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER.value, whisperResponse.text.trim())
+                        val userMessagePortion = Message(MESSAGE_ROLE.USER, whisperResponse.text.trim())
 
                         viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
 
-                        addMessageToConversationData(Message(MESSAGE_ROLE.USER.value, viewModel.unfinishedUserMessage.content))
+                        addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
                         cleanUnfinishedUserMessage()
 
                         val messages = ConversationData.messages
@@ -158,7 +158,7 @@ class ConversationFragment : Fragment() {
                         println("Contenido:" + chatGPTResponse.choices[0].message.content)
 
                         val chatGPTMessage = Message(
-                            MESSAGE_ROLE.ASSISTANT.value,
+                            MESSAGE_ROLE.ASSISTANT,
                             chatGPTResponse.choices[0].message.content
                         )
 
@@ -193,7 +193,7 @@ class ConversationFragment : Fragment() {
 
                     configureRecorder()
 
-                    addMessageToConversationData(Message(MESSAGE_ROLE.USER.value, viewModel.unfinishedUserMessage.content))
+                    addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
                     cleanUnfinishedUserMessage()
 
                     val messages = ConversationData.messages
@@ -206,7 +206,7 @@ class ConversationFragment : Fragment() {
                         println("Contenido:" + chatGPTResponse.choices[0].message.content)
 
                         val chatGPTMessage = Message(
-                            MESSAGE_ROLE.ASSISTANT.value,
+                            MESSAGE_ROLE.ASSISTANT,
                             chatGPTResponse.choices[0].message.content
                         )
 
@@ -442,7 +442,7 @@ class ConversationFragment : Fragment() {
         fos.close()
     }
 
-    private fun addMessageToView(message: Message) {
+    internal fun addMessageToView(message: Message): Int {
         val messageView = TextView(context)
 
         messageView.text = message.content
@@ -459,7 +459,7 @@ class ConversationFragment : Fragment() {
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels
 
         when (message.role) {
-            MESSAGE_ROLE.SYSTEM.value -> {
+            MESSAGE_ROLE.SYSTEM -> {
                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL
                 messageView.background = ContextCompat.getDrawable(
                     requireContext(),
@@ -467,7 +467,7 @@ class ConversationFragment : Fragment() {
                 )
                 messageView.setTextColor(Color.WHITE)
             }
-            MESSAGE_ROLE.ASSISTANT.value -> {
+            MESSAGE_ROLE.ASSISTANT -> {
                 layoutParams.gravity = Gravity.START
                 messageView.maxWidth = (screenWidth * 0.6).toInt()
                 messageView.background = ContextCompat.getDrawable(
@@ -475,7 +475,7 @@ class ConversationFragment : Fragment() {
                     R.drawable.round_corner_textview_assistant
                 )
             }
-            MESSAGE_ROLE.USER.value -> {
+            MESSAGE_ROLE.USER -> {
                 layoutParams.gravity = Gravity.END
                 messageView.maxWidth = (screenWidth * 0.6).toInt()
                 messageView.background = ContextCompat.getDrawable(
@@ -488,6 +488,10 @@ class ConversationFragment : Fragment() {
         messageView.layoutParams = layoutParams
 
         chatLayout.addView(messageView)
+
+        messageView.id = (1000..9000).random()
+
+        return messageView.id
     }
 
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {

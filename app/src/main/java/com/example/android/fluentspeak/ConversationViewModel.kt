@@ -16,7 +16,7 @@ import org.w3c.dom.Text
 
 
 class ConversationViewModel : ViewModel() {
-    var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER.value, "")
+    var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER, "")
 
     fun addMessageToUnfinishedUserMessage(userMessagePortion: Message) {
         unfinishedUserMessage.content += " " + userMessagePortion.content

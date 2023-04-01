@@ -1,7 +1,5 @@
 package com.example.android.fluentspeak
 
-
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.android.fluentspeak.network.Message
 import org.junit.Test
@@ -19,9 +17,9 @@ class ConversationViewModelTest {
         val content3 = "and I like to go to the gym"
 
         val conversationViewModel = ConversationViewModel()
-        val userMessagePortion1 = Message(MESSAGE_ROLE.USER.value, content1)
-        val userMessagePortion2 = Message(MESSAGE_ROLE.USER.value, content2)
-        val userMessagePortion3 = Message(MESSAGE_ROLE.USER.value, content3)
+        val userMessagePortion1 = Message(MESSAGE_ROLE.USER, content1)
+        val userMessagePortion2 = Message(MESSAGE_ROLE.USER, content2)
+        val userMessagePortion3 = Message(MESSAGE_ROLE.USER, content3)
 
         // When
         conversationViewModel.addMessageToUnfinishedUserMessage(userMessagePortion1)
@@ -29,7 +27,7 @@ class ConversationViewModelTest {
         conversationViewModel.addMessageToUnfinishedUserMessage(userMessagePortion3)
 
 
-            // Then
+        // Then
         assertEquals(content1 + " " + content2 + " " + content3, conversationViewModel.unfinishedUserMessage.content)
     }
 }
