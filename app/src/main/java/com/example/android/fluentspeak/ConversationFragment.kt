@@ -77,7 +77,7 @@ class ConversationFragment : Fragment() {
 
         val message = Message(MESSAGE_ROLE.SYSTEM, "You are a helpful assistant.")
 
-        addMessageToConversationData(message)
+        viewModel.addMessageToConversationData(message)
 
         addMessageToView(message)
 
@@ -146,7 +146,7 @@ class ConversationFragment : Fragment() {
 
                         addMessageToView(userMessagePortion)
 
-                        addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
+                        viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
                         cleanUnfinishedUserMessage()
 
                         val messages = ConversationData.messages
@@ -162,7 +162,7 @@ class ConversationFragment : Fragment() {
                             chatGPTResponse.choices[0].message.content
                         )
 
-                        addMessageToConversationData(chatGPTMessage)
+                        viewModel.addMessageToConversationData(chatGPTMessage)
 
                         addMessageToView(chatGPTMessage)
 
@@ -193,7 +193,7 @@ class ConversationFragment : Fragment() {
 
                     configureRecorder()
 
-                    addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
+                    viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
                     cleanUnfinishedUserMessage()
 
                     val messages = ConversationData.messages
@@ -210,7 +210,7 @@ class ConversationFragment : Fragment() {
                             chatGPTResponse.choices[0].message.content
                         )
 
-                        addMessageToConversationData(chatGPTMessage)
+                        viewModel.addMessageToConversationData(chatGPTMessage)
 
                         addMessageToView(chatGPTMessage)
 
@@ -430,10 +430,6 @@ class ConversationFragment : Fragment() {
 
     private fun cleanUnfinishedUserMessage() {
         viewModel.unfinishedUserMessage.content = ""
-    }
-
-    private fun addMessageToConversationData(message: Message) {
-        ConversationData.addMessage(message)
     }
 
     private fun writeDataToFile(data: ByteArray, file: File) {

@@ -23,6 +23,10 @@ class ConversationViewModel : ViewModel() {
         unfinishedUserMessage.content = unfinishedUserMessage.content.trim()
     }
 
+    fun addMessageToConversationData(message: Message) {
+        ConversationData.addMessage(message)
+    }
+
     suspend fun getWhisperResponse(whisperRequestData: WhisperRequestData): WhisperResponse {
         val filePart: RequestBody = RequestBody.create(
             "audio/aac".toMediaTypeOrNull(),

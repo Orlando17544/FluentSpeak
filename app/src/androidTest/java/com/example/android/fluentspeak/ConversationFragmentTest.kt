@@ -29,9 +29,9 @@ class ConversationFragmentTest {
         val content2 = "Fine thank you"
         val content3 = "Nice to meet you"
 
-        val userMessagePortion1 = Message(MESSAGE_ROLE.USER, content1)
-        val userMessagePortion2 = Message(MESSAGE_ROLE.ASSISTANT, content2)
-        val userMessagePortion3 = Message(MESSAGE_ROLE.USER, content3)
+        val userMessage1 = Message(MESSAGE_ROLE.USER, content1)
+        val assistantMessage1 = Message(MESSAGE_ROLE.ASSISTANT, content2)
+        val userMessage2 = Message(MESSAGE_ROLE.USER, content3)
 
         var id1: Int? = null
         var id2: Int? = null
@@ -40,9 +40,9 @@ class ConversationFragmentTest {
         // When
         val scenario = launchFragmentInContainer<ConversationFragment>(themeResId = R.style.Theme_FluentSpeak)
         scenario.onFragment {
-            id1 = it.addMessageToView(userMessagePortion1)
-            id2 = it.addMessageToView(userMessagePortion2)
-            id3 = it.addMessageToView(userMessagePortion3)
+            id1 = it.addMessageToView(userMessage1)
+            id2 = it.addMessageToView(assistantMessage1)
+            id3 = it.addMessageToView(userMessage2)
         }
 
         // Then
