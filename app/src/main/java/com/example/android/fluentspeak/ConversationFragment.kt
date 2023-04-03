@@ -161,8 +161,6 @@ class ConversationFragment : Fragment() {
                             viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
                         }
 
-                        println("Contenido:" + chatGPTResponse.choices[0].message.content)
-
                         val chatGPTMessage = Message(
                             MESSAGE_ROLE.ASSISTANT,
                             chatGPTResponse.choices[0].message.content
@@ -175,8 +173,6 @@ class ConversationFragment : Fragment() {
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
                             viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatGPTMessage.content)))
                         }
-
-                        println(textToSpeechResponse.audioContent)
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
 
@@ -209,8 +205,6 @@ class ConversationFragment : Fragment() {
                             viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
                         }
 
-                        println("Contenido:" + chatGPTResponse.choices[0].message.content)
-
                         val chatGPTMessage = Message(
                             MESSAGE_ROLE.ASSISTANT,
                             chatGPTResponse.choices[0].message.content
@@ -223,8 +217,6 @@ class ConversationFragment : Fragment() {
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
                             viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatGPTMessage.content)))
                         }
-
-                        println(textToSpeechResponse.audioContent)
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
 
