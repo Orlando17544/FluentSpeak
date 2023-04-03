@@ -76,8 +76,6 @@ class ConversationFragment : Fragment() {
         // Inflate the layout for this fragment
         val binding = FragmentConversationBinding.inflate(inflater)
 
-        //viewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
-
         chatLayout = binding.chatLayout
 
 
