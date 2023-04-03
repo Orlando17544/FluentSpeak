@@ -262,7 +262,7 @@
             app:layout_constraintStart_toStartOf="parent" />
 
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/record_button"
             android:layout_width="50dp"
             android:layout_height="50dp"
@@ -276,7 +276,7 @@
             app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/stop_button"
             android:layout_width="50dp"
             android:layout_height="50dp"
@@ -290,7 +290,7 @@
             app:layout_constraintEnd_toStartOf="@+id/translate_button"
             app:layout_constraintStart_toEndOf="@+id/record_button" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/translate_button"
             android:layout_width="50dp"
             android:layout_height="50dp"

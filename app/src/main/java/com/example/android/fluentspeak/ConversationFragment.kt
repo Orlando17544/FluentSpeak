@@ -17,7 +17,9 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
@@ -47,7 +49,7 @@ enum class MESSAGE_ROLE {
 
 class ConversationFragment : Fragment() {
 
-    private lateinit var viewModel: ConversationViewModel
+    //private lateinit var viewModel: ConversationViewModel
 
     private var currentRecordingState = RECORDING_STATE.STOP
     private var currentTranslatingState = TRANSLATING_STATE.STOP
@@ -63,6 +65,10 @@ class ConversationFragment : Fragment() {
 
     private lateinit var chatLayout: LinearLayout
 
+    private val viewModel: ConversationViewModel by viewModels<ConversationViewModel> {
+        ConversationViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -70,7 +76,7 @@ class ConversationFragment : Fragment() {
         // Inflate the layout for this fragment
         val binding = FragmentConversationBinding.inflate(inflater)
 
-        viewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
+        //viewModel = ViewModelProvider(this).get(ConversationViewModel::class.java)
 
         chatLayout = binding.chatLayout
 
@@ -81,12 +87,12 @@ class ConversationFragment : Fragment() {
 
         addMessageToView(message)
 
-        setupObservers(binding)
+        setupListeners(binding)
 
         return binding.root
     }
 
-    fun setupObservers(binding: FragmentConversationBinding) {
+    fun setupListeners(binding: FragmentConversationBinding) {
         binding.recordButton.setOnClickListener {
 
             when (currentRecordingState) {
@@ -229,6 +235,7 @@ class ConversationFragment : Fragment() {
                         startPlayer()
                         resetUnitlFinishedPlaying()
                     }
+                    binding.stopButton.setEnabled(false)
                     currentRecordingState = RECORDING_STATE.STOP
                 }
             }
@@ -251,7 +258,26 @@ class ConversationFragment : Fragment() {
                         }
                         TRANSLATING_STATE.START -> {
                             translator?.stop()
-                            configureTranslator()
+                            lifecycleScope.launch {
+                                val whisperResponse = withContext(Dispatchers.IO) {
+                                    viewModel.getWhisperResponse(WhisperRequestData(file = translatingCacheFile))
+                                }
+
+                                configureTranslator()
+
+                                val textToSpeechResponse = withContext(Dispatchers.IO) {
+                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(whisperResponse.text)))
+                                }
+
+                                val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                                writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                                configurePlayer()
+
+                                startPlayer()
+                                resetUnitlFinishedPlaying()
+                            }
                             (binding.translateButton as MaterialButton).icon =
                                 resources.getDrawable(R.drawable.baseline_translate_24, null)
                             binding.recordButton.setEnabled(true)
@@ -271,7 +297,26 @@ class ConversationFragment : Fragment() {
                         }
                         TRANSLATING_STATE.START -> {
                             translator?.stop()
-                            configureTranslator()
+                            lifecycleScope.launch {
+                                val whisperResponse = withContext(Dispatchers.IO) {
+                                    viewModel.getWhisperResponse(WhisperRequestData(file = translatingCacheFile))
+                                }
+
+                                configureTranslator()
+
+                                val textToSpeechResponse = withContext(Dispatchers.IO) {
+                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(whisperResponse.text)))
+                                }
+
+                                val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                                writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                                configurePlayer()
+
+                                startPlayer()
+                                resetUnitlFinishedPlaying()
+                            }
                             (binding.translateButton as MaterialButton).icon =
                                 resources.getDrawable(R.drawable.baseline_translate_24, null)
                             binding.recordButton.setEnabled(true)

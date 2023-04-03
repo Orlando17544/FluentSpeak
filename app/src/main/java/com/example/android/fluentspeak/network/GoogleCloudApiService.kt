@@ -3,7 +3,6 @@ package com.example.android.fluentspeak.network
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -40,7 +39,11 @@ interface GoogleCloudApiService {
     suspend fun getTextToSpeechResponse(@Body textToSpeechRequestData: TextToSpeechRequestData): TextToSpeechResponse
 }
 
-object GoogleCloudApi {
+object GoogleCloudApi: IGoogleCloudApi {
     val retrofitService : GoogleCloudApiService by lazy {
         retrofit.create(GoogleCloudApiService::class.java) }
+
+    override suspend fun getTextToSpeechResponse(textToSpeechRequestData: TextToSpeechRequestData): TextToSpeechResponse {
+        return retrofitService.getTextToSpeechResponse(textToSpeechRequestData)
+    }
 }

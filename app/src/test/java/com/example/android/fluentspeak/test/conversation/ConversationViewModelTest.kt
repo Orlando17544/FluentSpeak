@@ -1,6 +1,9 @@
-package com.example.android.fluentspeak
+package com.example.android.fluentspeak.test.conversation
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.android.fluentspeak.ConversationData
+import com.example.android.fluentspeak.ConversationViewModel
+import com.example.android.fluentspeak.MESSAGE_ROLE
 import com.example.android.fluentspeak.network.Message
 import org.junit.Test
 import org.junit.Assert.*
@@ -16,7 +19,7 @@ class ConversationViewModelTest {
         val content2 = "my name is Alberto"
         val content3 = "and I like to go to the gym"
 
-        val conversationViewModel = ConversationViewModel()
+        val conversationViewModel = ConversationViewModel(apisRepository)
         val userMessagePortion1 = Message(MESSAGE_ROLE.USER, content1)
         val userMessagePortion2 = Message(MESSAGE_ROLE.USER, content2)
         val userMessagePortion3 = Message(MESSAGE_ROLE.USER, content3)
@@ -39,7 +42,7 @@ class ConversationViewModelTest {
         val content3 = "my name is Alberto"
         val content4 = "and I like to go to the gym"
 
-        val conversationViewModel = ConversationViewModel()
+        val conversationViewModel = ConversationViewModel(apisRepository)
         val systemMessage = Message(MESSAGE_ROLE.SYSTEM, content1)
         val userMessage1 = Message(MESSAGE_ROLE.USER, content2)
         val assistantMessage1 = Message(MESSAGE_ROLE.ASSISTANT, content3)
@@ -67,7 +70,7 @@ class ConversationViewModelTest {
         val content7 = "I also like to watch youtube videos"
         val content8 = "What is your favorite color?"
 
-        val conversationViewModel = ConversationViewModel()
+        val conversationViewModel = ConversationViewModel(apisRepository)
         val systemMessage = Message(MESSAGE_ROLE.SYSTEM, content1)
         val userMessage1 = Message(MESSAGE_ROLE.USER, content2)
         val assistantMessage1 = Message(MESSAGE_ROLE.ASSISTANT, content3)

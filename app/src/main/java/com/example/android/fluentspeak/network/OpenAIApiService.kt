@@ -50,7 +50,15 @@ interface OpenAIApiService {
     suspend fun getChatGPTResponse(@Body chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
 }
 
-object OpenAIApi {
+object OpenAIApi: IOpenAIApi {
     val retrofitService : OpenAIApiService by lazy {
         retrofit.create(OpenAIApiService::class.java) }
+
+    override suspend fun getWhisperResponse(@PartMap rtne: Map<String, RequestBody>): WhisperResponse {
+        return retrofitService.getWhisperResponse(rtne)
+    }
+
+    override suspend fun getChatGPTResponse(@Body uerotn: ChatGPTRequestData): ChatGPTResponse {
+        return retrofitService.getChatGPTResponse(uerotn)
+    }
 }

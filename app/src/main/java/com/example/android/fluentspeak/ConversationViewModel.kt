@@ -1,21 +1,13 @@
 package com.example.android.fluentspeak
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.android.fluentspeak.network.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
-import org.w3c.dom.Text
 
 
-class ConversationViewModel : ViewModel() {
+class ConversationViewModel(private val apisRepository: ApisRepository) : ViewModel() {
     var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER, "")
 
     fun addMessageToUnfinishedUserMessage(userMessagePortion: Message) {
@@ -70,10 +62,14 @@ class ConversationViewModel : ViewModel() {
         var whisperResponse: WhisperResponse? = null
 
         try {
-            whisperResponse = OpenAIApi.retrofitService.getWhisperResponse(params)
+            whisperResponse = apisRepository.openAIApi.getWhisperResponse(params)
+            //whisperResponse = ApisRepository.openAIApi.retrofitService.getWhisperResponse(params)
+            //whisperResponse = OpenAIApi.retrofitService.getWhisperResponse(params)
         } catch (e: Exception) {
             e.message?.let { Log.e("WHISPER_RESPONSE_ERROR", it) }
         }
+
+        println(whisperResponse?.text)
 
         return whisperResponse ?: WhisperResponse("")
     }
@@ -82,7 +78,9 @@ class ConversationViewModel : ViewModel() {
         var chatGPTResponse: ChatGPTResponse? = null
 
         try {
-            chatGPTResponse = OpenAIApi.retrofitService.getChatGPTResponse(chatGPTRequestData)
+            chatGPTResponse = apisRepository.openAIApi.getChatGPTResponse(chatGPTRequestData)
+            //chatGPTResponse = ApisRepository.openAIApi.retrofitService.getChatGPTResponse(chatGPTRequestData)
+            //chatGPTResponse = OpenAIApi.retrofitService.getChatGPTResponse(chatGPTRequestData)
         } catch (e: Exception) {
             e.message?.let { Log.e("CHATGPT_RESPONSE_ERROR", it) }
         }
@@ -101,7 +99,8 @@ class ConversationViewModel : ViewModel() {
             )
 
             textToSpeechResponse =
-                GoogleCloudApi.retrofitService.getTextToSpeechResponse(textToSpeechRequestData)
+                apisRepository.googleCloudApi.getTextToSpeechResponse(textToSpeechRequestData)
+                //GoogleCloudApi.retrofitService.getTextToSpeechResponse(textToSpeechRequestData)
         } catch (e: Exception) {
             //result.postValue(Message("exception", "Failure: ${e.message}"))
             e.message?.let { Log.e("SPEECH_RESPONSE_ERROR", it) }
@@ -109,4 +108,12 @@ class ConversationViewModel : ViewModel() {
 
         return textToSpeechResponse ?: TextToSpeechResponse("")
     }
+}
+
+@Suppress("UNCHECKED_CAST")
+class ConversationViewModelFactory (
+    private val apisRepository: ApisRepository
+) : ViewModelProvider.NewInstanceFactory() {
+    override fun <T : ViewModel> create(modelClass: Class<T>) =
+        (ConversationViewModel(apisRepository) as T)
 }
