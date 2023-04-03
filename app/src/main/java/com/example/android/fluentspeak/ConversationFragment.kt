@@ -79,7 +79,7 @@ class ConversationFragment : Fragment() {
         chatLayout = binding.chatLayout
 
 
-        val message = Message(MESSAGE_ROLE.SYSTEM, "You are a helpful assistant.")
+        val message = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a helpful assistant.")
 
         viewModel.addMessageToConversationData(message)
 
@@ -97,6 +97,17 @@ class ConversationFragment : Fragment() {
                 RECORDING_STATE.START -> {
                     recorder?.stop()
 
+                    disableButtons(binding)
+
+                    val updateButtons = {
+                        (it as MaterialButton).icon =
+                            resources.getDrawable(R.drawable.baseline_play_arrow_24, null)
+                        binding.recordButton.setEnabled(true)
+                        binding.stopButton.setEnabled(true)
+                        binding.translateButton.setEnabled(true)
+                        currentRecordingState = RECORDING_STATE.PAUSE
+                    }
+
                     lifecycleScope.launch {
                         val whisperResponse = withContext(Dispatchers.IO) {
                             viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
@@ -104,21 +115,20 @@ class ConversationFragment : Fragment() {
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER, whisperResponse.text.trim())
+                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), whisperResponse.text.trim())
 
                         viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
+
+                        updateButtons()
                     }
-                    (it as MaterialButton).icon =
-                        resources.getDrawable(R.drawable.baseline_play_arrow_24, null)
-                    binding.translateButton.setEnabled(true)
-                    currentRecordingState = RECORDING_STATE.PAUSE
                 }
                 RECORDING_STATE.STOP -> {
                     recorder?.start()
                     (it as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_pause_24, null)
+                    binding.recordButton.setEnabled(true)
                     binding.stopButton.setEnabled(true)
                     binding.translateButton.setEnabled(false)
                     currentRecordingState = RECORDING_STATE.START
@@ -127,6 +137,8 @@ class ConversationFragment : Fragment() {
                     recorder?.start()
                     (it as MaterialButton).icon =
                         resources.getDrawable(R.drawable.baseline_pause_24, null)
+                    binding.recordButton.setEnabled(true)
+                    binding.stopButton.setEnabled(true)
                     binding.translateButton.setEnabled(false)
                     currentRecordingState = RECORDING_STATE.START
                 }
@@ -137,6 +149,18 @@ class ConversationFragment : Fragment() {
             when (currentRecordingState) {
                 RECORDING_STATE.START -> {
                     recorder?.stop()
+
+                    disableButtons(binding)
+
+                    val updateButtons = {
+                        (binding.recordButton as MaterialButton).icon =
+                            resources.getDrawable(R.drawable.baseline_mic_24, null)
+                        binding.recordButton.setEnabled(true)
+                        binding.stopButton.setEnabled(false)
+                        binding.translateButton.setEnabled(true)
+                        currentRecordingState = RECORDING_STATE.STOP
+                    }
+
                     lifecycleScope.launch {
                         val whisperResponse = withContext(Dispatchers.IO) {
                             viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
@@ -144,13 +168,13 @@ class ConversationFragment : Fragment() {
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER, whisperResponse.text.trim())
+                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), whisperResponse.text.trim())
 
                         viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
 
-                        viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
+                        viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedUserMessage.content))
                         cleanUnfinishedUserMessage()
 
                         val messages = ConversationData.messages
@@ -160,7 +184,7 @@ class ConversationFragment : Fragment() {
                         }
 
                         val chatGPTMessage = Message(
-                            MESSAGE_ROLE.ASSISTANT,
+                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             chatGPTResponse.choices[0].message.content
                         )
 
@@ -179,13 +203,8 @@ class ConversationFragment : Fragment() {
                         configurePlayer()
 
                         startPlayer()
-                        resetUnitlFinishedPlaying()
+                        resetUntilFinishedPlaying(updateButtons)
                     }
-                    it.setEnabled(false)
-                    (binding.recordButton as MaterialButton).icon =
-                        resources.getDrawable(R.drawable.baseline_mic_24, null)
-                    binding.translateButton.setEnabled(true)
-                    currentRecordingState = RECORDING_STATE.STOP
                 }
                 RECORDING_STATE.STOP -> return@setOnClickListener
                 RECORDING_STATE.PAUSE -> {
@@ -193,10 +212,19 @@ class ConversationFragment : Fragment() {
 
                     configureRecorder()
 
-                    viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER, viewModel.unfinishedUserMessage.content))
+                    viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedUserMessage.content))
                     cleanUnfinishedUserMessage()
 
                     val messages = ConversationData.messages
+
+                    disableButtons(binding)
+
+                    val updateButtons = {
+                        binding.recordButton.setEnabled(true)
+                        binding.stopButton.setEnabled(false)
+                        binding.translateButton.setEnabled(true)
+                        currentRecordingState = RECORDING_STATE.STOP
+                    }
 
                     lifecycleScope.launch {
                         val chatGPTResponse = withContext(Dispatchers.IO) {
@@ -204,7 +232,7 @@ class ConversationFragment : Fragment() {
                         }
 
                         val chatGPTMessage = Message(
-                            MESSAGE_ROLE.ASSISTANT,
+                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             chatGPTResponse.choices[0].message.content
                         )
 
@@ -223,10 +251,8 @@ class ConversationFragment : Fragment() {
                         configurePlayer()
 
                         startPlayer()
-                        resetUnitlFinishedPlaying()
+                        resetUntilFinishedPlaying(updateButtons)
                     }
-                    binding.stopButton.setEnabled(false)
-                    currentRecordingState = RECORDING_STATE.STOP
                 }
             }
         }
@@ -244,10 +270,23 @@ class ConversationFragment : Fragment() {
                                 resources.getDrawable(R.drawable.baseline_stop_24, null)
                             binding.recordButton.setEnabled(false)
                             binding.stopButton.setEnabled(false)
+                            binding.translateButton.setEnabled(true)
                             currentTranslatingState = TRANSLATING_STATE.START
                         }
                         TRANSLATING_STATE.START -> {
                             translator?.stop()
+
+                            disableButtons(binding)
+
+                            val updateButtons = {
+                                (binding.translateButton as MaterialButton).icon =
+                                    resources.getDrawable(R.drawable.baseline_translate_24, null)
+                                binding.recordButton.setEnabled(true)
+                                binding.stopButton.setEnabled(false)
+                                binding.translateButton.setEnabled(true)
+                                currentTranslatingState = TRANSLATING_STATE.STOP
+                            }
+
                             lifecycleScope.launch {
                                 val whisperResponse = withContext(Dispatchers.IO) {
                                     viewModel.getWhisperResponse(WhisperRequestData(file = translatingCacheFile))
@@ -266,12 +305,8 @@ class ConversationFragment : Fragment() {
                                 configurePlayer()
 
                                 startPlayer()
-                                resetUnitlFinishedPlaying()
+                                resetUntilFinishedPlaying(updateButtons)
                             }
-                            (binding.translateButton as MaterialButton).icon =
-                                resources.getDrawable(R.drawable.baseline_translate_24, null)
-                            binding.recordButton.setEnabled(true)
-                            currentTranslatingState = TRANSLATING_STATE.STOP
                         }
                     }
                 }
@@ -283,10 +318,23 @@ class ConversationFragment : Fragment() {
                                 resources.getDrawable(R.drawable.baseline_stop_24, null)
                             binding.recordButton.setEnabled(false)
                             binding.stopButton.setEnabled(false)
+                            binding.translateButton.setEnabled(true)
                             currentTranslatingState = TRANSLATING_STATE.START
                         }
                         TRANSLATING_STATE.START -> {
                             translator?.stop()
+
+                            disableButtons(binding)
+
+                            val updateButtons = {
+                                (binding.translateButton as MaterialButton).icon =
+                                    resources.getDrawable(R.drawable.baseline_translate_24, null)
+                                binding.recordButton.setEnabled(true)
+                                binding.stopButton.setEnabled(true)
+                                binding.translateButton.setEnabled(true)
+                                currentTranslatingState = TRANSLATING_STATE.STOP
+                            }
+
                             lifecycleScope.launch {
                                 val whisperResponse = withContext(Dispatchers.IO) {
                                     viewModel.getWhisperResponse(WhisperRequestData(file = translatingCacheFile))
@@ -305,13 +353,8 @@ class ConversationFragment : Fragment() {
                                 configurePlayer()
 
                                 startPlayer()
-                                resetUnitlFinishedPlaying()
+                                resetUntilFinishedPlaying(updateButtons)
                             }
-                            (binding.translateButton as MaterialButton).icon =
-                                resources.getDrawable(R.drawable.baseline_translate_24, null)
-                            binding.recordButton.setEnabled(true)
-                            binding.stopButton.setEnabled(true)
-                            currentTranslatingState = TRANSLATING_STATE.STOP
                         }
                     }
                 }
@@ -457,9 +500,15 @@ class ConversationFragment : Fragment() {
         mediaPlayer?.start()
     }
 
-    private fun resetUnitlFinishedPlaying() {
-        mediaPlayer?.setOnCompletionListener {
+    private fun resetUntilFinishedPlaying(updateButtons: () -> Unit) {
+        if (mediaPlayer?.isPlaying == true) {
+            mediaPlayer?.setOnCompletionListener {
+                mediaPlayer?.reset()
+                updateButtons()
+            }
+        } else {
             mediaPlayer?.reset()
+            updateButtons()
         }
     }
 
@@ -471,6 +520,12 @@ class ConversationFragment : Fragment() {
         val fos = FileOutputStream(file)
         fos.write(data)
         fos.close()
+    }
+
+    private fun disableButtons(binding: FragmentConversationBinding) {
+        binding.recordButton.setEnabled(false)
+        binding.stopButton.setEnabled(false)
+        binding.translateButton.setEnabled(false)
     }
 
     internal fun addMessageToView(message: Message): Int {
@@ -490,7 +545,7 @@ class ConversationFragment : Fragment() {
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels
 
         when (message.role) {
-            MESSAGE_ROLE.SYSTEM -> {
+            MESSAGE_ROLE.SYSTEM.toString().lowercase() -> {
                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL
                 messageView.background = ContextCompat.getDrawable(
                     requireContext(),
@@ -498,7 +553,7 @@ class ConversationFragment : Fragment() {
                 )
                 messageView.setTextColor(Color.WHITE)
             }
-            MESSAGE_ROLE.ASSISTANT -> {
+            MESSAGE_ROLE.ASSISTANT.toString().lowercase() -> {
                 layoutParams.gravity = Gravity.START
                 messageView.maxWidth = (screenWidth * 0.6).toInt()
                 messageView.background = ContextCompat.getDrawable(
@@ -506,7 +561,7 @@ class ConversationFragment : Fragment() {
                     R.drawable.round_corner_textview_assistant
                 )
             }
-            MESSAGE_ROLE.USER -> {
+            MESSAGE_ROLE.USER.toString().lowercase() -> {
                 layoutParams.gravity = Gravity.END
                 messageView.maxWidth = (screenWidth * 0.6).toInt()
                 messageView.background = ContextCompat.getDrawable(

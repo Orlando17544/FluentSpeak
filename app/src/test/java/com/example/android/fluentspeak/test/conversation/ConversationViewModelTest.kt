@@ -1,8 +1,5 @@
 package com.example.android.fluentspeak.test.conversation
 
-import android.app.Application
-import androidx.fragment.app.viewModels
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.android.fluentspeak.*
 import com.example.android.fluentspeak.network.Message
@@ -22,9 +19,9 @@ class ConversationViewModelTest {
         val content3 = "and I like to go to the gym"
 
         val conversationViewModel = ConversationViewModel(ServiceLocator.provideApisRepository())
-        val userMessagePortion1 = Message(MESSAGE_ROLE.USER, content1)
-        val userMessagePortion2 = Message(MESSAGE_ROLE.USER, content2)
-        val userMessagePortion3 = Message(MESSAGE_ROLE.USER, content3)
+        val userMessagePortion1 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content1)
+        val userMessagePortion2 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content2)
+        val userMessagePortion3 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content3)
 
         // When
         conversationViewModel.addMessageToUnfinishedUserMessage(userMessagePortion1)
@@ -45,10 +42,10 @@ class ConversationViewModelTest {
         val content4 = "and I like to go to the gym"
 
         val conversationViewModel = ConversationViewModel(ServiceLocator.provideApisRepository())
-        val systemMessage = Message(MESSAGE_ROLE.SYSTEM, content1)
-        val userMessage1 = Message(MESSAGE_ROLE.USER, content2)
-        val assistantMessage1 = Message(MESSAGE_ROLE.ASSISTANT, content3)
-        val userMessage2 = Message(MESSAGE_ROLE.USER, content4)
+        val systemMessage = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), content1)
+        val userMessage1 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content2)
+        val assistantMessage1 = Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), content3)
+        val userMessage2 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content4)
 
         // When
         conversationViewModel.addMessageToConversationData(systemMessage)
@@ -73,14 +70,14 @@ class ConversationViewModelTest {
         val content8 = "What is your favorite color?"
 
         val conversationViewModel = ConversationViewModel(ServiceLocator.provideApisRepository())
-        val systemMessage = Message(MESSAGE_ROLE.SYSTEM, content1)
-        val userMessage1 = Message(MESSAGE_ROLE.USER, content2)
-        val assistantMessage1 = Message(MESSAGE_ROLE.ASSISTANT, content3)
-        val userMessage2 = Message(MESSAGE_ROLE.USER, content4)
-        val assistantMessage2 = Message(MESSAGE_ROLE.ASSISTANT, content5)
-        val userMessage3 = Message(MESSAGE_ROLE.USER, content6)
-        val assistantMessage3 = Message(MESSAGE_ROLE.ASSISTANT, content7)
-        val userMessage4 = Message(MESSAGE_ROLE.USER, content8)
+        val systemMessage = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), content1)
+        val userMessage1 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content2)
+        val assistantMessage1 = Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), content3)
+        val userMessage2 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content4)
+        val assistantMessage2 = Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), content5)
+        val userMessage3 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content6)
+        val assistantMessage3 = Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), content7)
+        val userMessage4 = Message(MESSAGE_ROLE.USER.toString().lowercase(), content8)
 
         // When
         conversationViewModel.addMessageToConversationData(systemMessage)
@@ -94,8 +91,8 @@ class ConversationViewModelTest {
 
         // Then
         assertEquals(5, ConversationData.messages.size)
-        assertEquals(Message(MESSAGE_ROLE.SYSTEM, content1), ConversationData.messages[0])
-        assertEquals(Message(MESSAGE_ROLE.ASSISTANT, content5), ConversationData.messages[1])
-        assertEquals(Message(MESSAGE_ROLE.USER, content8), ConversationData.messages[4])
+        assertEquals(Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), content1), ConversationData.messages[0])
+        assertEquals(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), content5), ConversationData.messages[1])
+        assertEquals(Message(MESSAGE_ROLE.USER.toString().lowercase(), content8), ConversationData.messages[4])
     }
 }

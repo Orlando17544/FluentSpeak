@@ -6,9 +6,8 @@ import com.example.android.fluentspeak.network.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
-
 class ConversationViewModel(private val apisRepository: ApisRepository) : ViewModel() {
-    var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER, "")
+    var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER.toString().lowercase(), "")
 
     fun addMessageToUnfinishedUserMessage(userMessagePortion: Message) {
         unfinishedUserMessage.content += " " + userMessagePortion.content

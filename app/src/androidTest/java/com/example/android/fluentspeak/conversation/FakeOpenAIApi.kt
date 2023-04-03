@@ -18,7 +18,7 @@ class FakeOpenAIApi: IOpenAIApi {
             listOf<Choice>(
                 Choice(
                     0,
-                    Message(MESSAGE_ROLE.ASSISTANT, "chatgpt"),
+                    Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), "chatgpt"),
                     ""
                 )
             ),

@@ -33,7 +33,7 @@ private val retrofit = Retrofit.Builder()
 interface OpenAIApiService {
     @Headers(
         "Host: api.openai.com",
-        "Authorization: Bearer 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"
+        "Authorization: Bearer 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"
     )
     @Multipart
     @POST("v1/audio/transcriptions")
@@ -44,7 +44,7 @@ interface OpenAIApiService {
 
     @Headers(
         "Host: api.openai.com",
-        "Authorization: Bearer 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"
+        "Authorization: Bearer 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"
     )
     @POST("v1/chat/completions")
     suspend fun getChatGPTResponse(@Body chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
@@ -54,11 +54,11 @@ object OpenAIApi: IOpenAIApi {
     val retrofitService : OpenAIApiService by lazy {
         retrofit.create(OpenAIApiService::class.java) }
 
-    override suspend fun getWhisperResponse(@PartMap rtne: Map<String, RequestBody>): WhisperResponse {
-        return retrofitService.getWhisperResponse(rtne)
+    override suspend fun getWhisperResponse(whisperParams: Map<String, RequestBody>): WhisperResponse {
+        return retrofitService.getWhisperResponse(whisperParams)
     }
 
-    override suspend fun getChatGPTResponse(@Body uerotn: ChatGPTRequestData): ChatGPTResponse {
-        return retrofitService.getChatGPTResponse(uerotn)
+    override suspend fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse {
+        return retrofitService.getChatGPTResponse(chatGPTRequestData)
     }
 }
