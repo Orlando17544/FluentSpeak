@@ -16,7 +16,7 @@ data class ChatGPTRequestData(
     val stop: String? = null,
 
     @Json(name = "max_tokens")
-    val maxTokens: Int = 100,
+    val maxTokens: Int = 50,
 
     @Json(name = "presence_penalty")
     val presencePenalty: Float = 0f,

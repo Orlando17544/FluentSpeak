@@ -4,7 +4,7 @@ import com.squareup.moshi.JsonClass
 import java.io.File
 
 @JsonClass(generateAdapter = true)
-data class WhisperRequestData(
+data class WhisperTranscriRequestData(
     val file: File,
     val model: String = "whisper-1",
     val prompt: String = "",
