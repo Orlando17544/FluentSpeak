@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class ChatGPTRequestData(
+data class ChatCompletionRequestData(
     val model: String = "gpt-3.5-turbo",
     val messages: List<Message>,
     val temperature: Float = 1f,

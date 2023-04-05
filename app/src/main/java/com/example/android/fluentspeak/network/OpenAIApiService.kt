@@ -38,27 +38,42 @@ interface OpenAIApiService {
     @Multipart
     @POST("v1/audio/transcriptions")
     @JvmSuppressWildcards
-    suspend fun getWhisperResponse(
-        @PartMap whisperParams: Map<String, RequestBody>
-    ): WhisperResponse
+    suspend fun getTranscriptionResponse(
+        @PartMap transcriptionParams: Map<String, RequestBody>
+    ): TranscriptionResponse
+
+    @Headers(
+        "Host: api.openai.com",
+        "Authorization: Bearer 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"
+    )
+    @Multipart
+    @POST("v1/audio/translations")
+    @JvmSuppressWildcards
+    suspend fun getTranslationResponse(
+        @PartMap translationParams: Map<String, RequestBody>
+    ): TranslationResponse
 
     @Headers(
         "Host: api.openai.com",
         "Authorization: Bearer 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"
     )
     @POST("v1/chat/completions")
-    suspend fun getChatGPTResponse(@Body chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
+    suspend fun getChatCompletionResponse(@Body chatCompletionRequestData: ChatCompletionRequestData): ChatCompletionResponse
 }
 
 object OpenAIApi: IOpenAIApi {
     val retrofitService : OpenAIApiService by lazy {
         retrofit.create(OpenAIApiService::class.java) }
 
-    override suspend fun getWhisperResponse(whisperParams: Map<String, RequestBody>): WhisperResponse {
-        return retrofitService.getWhisperResponse(whisperParams)
+    override suspend fun getTranscriptionResponse(transcriptionParams: Map<String, RequestBody>): TranscriptionResponse {
+        return retrofitService.getTranscriptionResponse(transcriptionParams)
     }
 
-    override suspend fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse {
-        return retrofitService.getChatGPTResponse(chatGPTRequestData)
+    override suspend fun getTranslationResponse(translationParams: Map<String, RequestBody>): TranslationResponse {
+        return retrofitService.getTranslationResponse(translationParams)
+    }
+
+    override suspend fun getChatCompletionResponse(chatCompletionRequestData: ChatCompletionRequestData): ChatCompletionResponse {
+        return retrofitService.getChatCompletionResponse(chatCompletionRequestData)
     }
 }

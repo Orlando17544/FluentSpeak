@@ -4,11 +4,10 @@ import com.squareup.moshi.JsonClass
 import java.io.File
 
 @JsonClass(generateAdapter = true)
-data class TranscriptionRequestData(
+data class TranslationRequestData(
     val file: File,
     val model: String = "whisper-1",
     val prompt: String = "",
     val responseFormat: String = "json",
-    val temperature: Float = 0f,
-    val language: String = "en"
+    val temperature: Float = 0f
 )

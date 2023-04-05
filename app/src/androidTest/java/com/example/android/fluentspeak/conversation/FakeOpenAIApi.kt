@@ -6,12 +6,16 @@ import com.example.android.fluentspeak.network.*
 import okhttp3.RequestBody
 
 class FakeOpenAIApi: IOpenAIApi {
-    override suspend fun getWhisperResponse(whisperParams: Map<String, RequestBody>): WhisperResponse {
-        return WhisperResponse("whisper")
+    override suspend fun getTranscriptionResponse(transcriptionParams: Map<String, RequestBody>): TranscriptionResponse {
+        return TranscriptionResponse("whisper")
     }
 
-    override suspend fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse {
-        return ChatGPTResponse(
+    override suspend fun getTranslationResponse(translationParams: Map<String, RequestBody>): TranslationResponse {
+        return TranslationResponse("whisper")
+    }
+
+    override suspend fun getChatCompletionResponse(chatCompletionRequestData: ChatCompletionRequestData): ChatCompletionResponse {
+        return ChatCompletionResponse(
             "",
             "",
             0,

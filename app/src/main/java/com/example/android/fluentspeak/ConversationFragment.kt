@@ -49,8 +49,6 @@ enum class MESSAGE_ROLE {
 
 class ConversationFragment : Fragment() {
 
-    //private lateinit var viewModel: ConversationViewModel
-
     private var currentRecordingState = RECORDING_STATE.STOP
     private var currentTranslatingState = TRANSLATING_STATE.STOP
 
@@ -109,13 +107,13 @@ class ConversationFragment : Fragment() {
                     }
 
                     lifecycleScope.launch {
-                        val whisperResponse = withContext(Dispatchers.IO) {
-                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
+                        val transcriptionResponse = withContext(Dispatchers.IO) {
+                            viewModel.getTranscriptionResponse(TranscriptionRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
                         }
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), whisperResponse.text.trim())
+                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), transcriptionResponse.text.trim())
 
                         viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
@@ -162,13 +160,13 @@ class ConversationFragment : Fragment() {
                     }
 
                     lifecycleScope.launch {
-                        val whisperResponse = withContext(Dispatchers.IO) {
-                            viewModel.getWhisperResponse(WhisperRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
+                        val transcriptionResponse = withContext(Dispatchers.IO) {
+                            viewModel.getTranscriptionResponse(TranscriptionRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
                         }
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), whisperResponse.text.trim())
+                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), transcriptionResponse.text.trim())
 
                         viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
 
@@ -179,21 +177,21 @@ class ConversationFragment : Fragment() {
 
                         val messages = ConversationData.messages
 
-                        val chatGPTResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
+                        val chatCompletionResponse = withContext(Dispatchers.IO) {
+                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(messages = messages))
                         }
 
-                        val chatGPTMessage = Message(
+                        val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            chatGPTResponse.choices[0].message.content
+                            chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessageToConversationData(chatGPTMessage)
+                        viewModel.addMessageToConversationData(chatCompletionMessage)
 
-                        addMessageToView(chatGPTMessage)
+                        addMessageToView(chatCompletionMessage)
 
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatGPTMessage.content)))
+                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content)))
                         }
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -227,21 +225,21 @@ class ConversationFragment : Fragment() {
                     }
 
                     lifecycleScope.launch {
-                        val chatGPTResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatGPTResponse(ChatGPTRequestData(messages = messages))
+                        val chatCompletionResponse = withContext(Dispatchers.IO) {
+                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(messages = messages))
                         }
 
-                        val chatGPTMessage = Message(
+                        val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            chatGPTResponse.choices[0].message.content
+                            chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessageToConversationData(chatGPTMessage)
+                        viewModel.addMessageToConversationData(chatCompletionMessage)
 
-                        addMessageToView(chatGPTMessage)
+                        addMessageToView(chatCompletionMessage)
 
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatGPTMessage.content)))
+                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content)))
                         }
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -288,14 +286,14 @@ class ConversationFragment : Fragment() {
                             }
 
                             lifecycleScope.launch {
-                                val whisperResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getWhisperResponse(WhisperRequestData(file = translatingCacheFile))
+                                val translationResponse = withContext(Dispatchers.IO) {
+                                    viewModel.getTranslationResponse(TranslationRequestData(file = translatingCacheFile))
                                 }
 
                                 configureTranslator()
 
                                 val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(whisperResponse.text)))
+                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text)))
                                 }
 
                                 val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -336,14 +334,14 @@ class ConversationFragment : Fragment() {
                             }
 
                             lifecycleScope.launch {
-                                val whisperResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getWhisperResponse(WhisperRequestData(file = translatingCacheFile))
+                                val translationResponse = withContext(Dispatchers.IO) {
+                                    viewModel.getTranslationResponse(TranslationRequestData(file = translatingCacheFile))
                                 }
 
                                 configureTranslator()
 
                                 val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(whisperResponse.text)))
+                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text)))
                                 }
 
                                 val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -490,10 +488,10 @@ class ConversationFragment : Fragment() {
     }
 
     private fun configurePlayer() {
-        mediaPlayer?.apply {
-            setDataSource(syntheticCacheFile.absolutePath)
-            prepare()
-        }
+            mediaPlayer?.apply {
+                setDataSource(syntheticCacheFile.absolutePath)
+                prepare()
+            }
     }
 
     private fun startPlayer() {

@@ -5,7 +5,9 @@ import retrofit2.http.Body
 import retrofit2.http.PartMap
 
 interface IOpenAIApi {
-    suspend fun getWhisperResponse(whisperParams: Map<String, RequestBody>): WhisperResponse
+    suspend fun getTranscriptionResponse(transcriptionParams: Map<String, RequestBody>): TranscriptionResponse
 
-    suspend fun getChatGPTResponse(chatGPTRequestData: ChatGPTRequestData): ChatGPTResponse
+    suspend fun getTranslationResponse(translationParams: Map<String, RequestBody>): TranslationResponse
+
+    suspend fun getChatCompletionResponse(chatCompletionRequestData: ChatCompletionRequestData): ChatCompletionResponse
 }

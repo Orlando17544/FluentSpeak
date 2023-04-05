@@ -1,8 +1,9 @@
 package com.example.android.fluentspeak.network
 
 import com.squareup.moshi.JsonClass
+import java.io.File
 
 @JsonClass(generateAdapter = true)
-data class TranscriptionResponse (
-        val text: String
-        )
+data class TranslationResponse(
+    val text: String
+)
