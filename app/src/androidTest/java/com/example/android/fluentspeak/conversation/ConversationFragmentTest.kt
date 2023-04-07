@@ -395,4 +395,17 @@ class ConversationFragmentTest {
 
         // Then
     }
+
+    @Test
+    fun setupListeners_twoClicksRecordButtonOneClickRecordButton_noSetDataSourceFDFailedError() {
+        // Given
+        val scenario = launchFragmentInContainer<ConversationFragment>(themeResId = R.style.Theme_FluentSpeak)
+
+        // When
+        scenario.onFragment {
+            it.configurePlayer()
+        }
+
+        // Then
+    }
 }
