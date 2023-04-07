@@ -4,6 +4,7 @@ package com.example.android.fluentspeak.conversation
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.doubleClick
 import androidx.test.espresso.assertion.PositionAssertions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
@@ -371,5 +372,27 @@ class ConversationFragmentTest {
             .check(isCompletelyBelow(allOf(withParent(withId(R.id.chat_layout)), withParentIndex(2))))
         onView(allOf(withParent(withId(R.id.chat_layout)), withParentIndex(3)))
             .check(isCompletelyLeftOf(allOf(withParent(withId(R.id.chat_layout)), withParentIndex(2))))
+    }
+
+    @Test
+    fun setupListeners_twoImmediateClicksRecordButton_noRuntimeExceptionStopFailed() {
+        // Given
+        launchFragmentInContainer<ConversationFragment>(themeResId = R.style.Theme_FluentSpeak)
+
+        // When
+        onView(withId(R.id.record_button)).perform(doubleClick())
+
+        // Then
+    }
+
+    @Test
+    fun setupListeners_twoImmediateClicksTranslateButton_noRuntimeExceptionStopFailed() {
+        // Given
+        launchFragmentInContainer<ConversationFragment>(themeResId = R.style.Theme_FluentSpeak)
+
+        // When
+        onView(withId(R.id.translate_button)).perform(doubleClick())
+
+        // Then
     }
 }

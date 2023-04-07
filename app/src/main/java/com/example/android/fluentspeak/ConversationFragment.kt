@@ -7,7 +7,7 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
-import android.util.DisplayMetrics
+import android.provider.MediaStore.Audio.Media
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -18,21 +18,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
 import com.example.android.fluentspeak.network.*
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.util.*
 
 
 enum class RECORDING_STATE {
@@ -93,7 +88,7 @@ class ConversationFragment : Fragment() {
 
             when (currentRecordingState) {
                 RECORDING_STATE.START -> {
-                    recorder?.stop()
+                    stopRecordingRecorder()
 
                     disableButtons(binding)
 
@@ -103,7 +98,6 @@ class ConversationFragment : Fragment() {
                         binding.recordButton.setEnabled(true)
                         binding.stopButton.setEnabled(true)
                         binding.translateButton.setEnabled(true)
-                        currentRecordingState = RECORDING_STATE.PAUSE
                     }
 
                     lifecycleScope.launch {
@@ -121,6 +115,7 @@ class ConversationFragment : Fragment() {
 
                         updateButtons()
                     }
+                    currentRecordingState = RECORDING_STATE.PAUSE
                 }
                 RECORDING_STATE.STOP -> {
                     recorder?.start()
@@ -146,7 +141,7 @@ class ConversationFragment : Fragment() {
         binding.stopButton.setOnClickListener {
             when (currentRecordingState) {
                 RECORDING_STATE.START -> {
-                    recorder?.stop()
+                    stopRecordingRecorder()
 
                     disableButtons(binding)
 
@@ -156,7 +151,6 @@ class ConversationFragment : Fragment() {
                         binding.recordButton.setEnabled(true)
                         binding.stopButton.setEnabled(false)
                         binding.translateButton.setEnabled(true)
-                        currentRecordingState = RECORDING_STATE.STOP
                     }
 
                     lifecycleScope.launch {
@@ -203,6 +197,7 @@ class ConversationFragment : Fragment() {
                         startPlayer()
                         resetUntilFinishedPlaying(updateButtons)
                     }
+                    currentRecordingState = RECORDING_STATE.STOP
                 }
                 RECORDING_STATE.STOP -> return@setOnClickListener
                 RECORDING_STATE.PAUSE -> {
@@ -221,7 +216,6 @@ class ConversationFragment : Fragment() {
                         binding.recordButton.setEnabled(true)
                         binding.stopButton.setEnabled(false)
                         binding.translateButton.setEnabled(true)
-                        currentRecordingState = RECORDING_STATE.STOP
                     }
 
                     lifecycleScope.launch {
@@ -251,6 +245,7 @@ class ConversationFragment : Fragment() {
                         startPlayer()
                         resetUntilFinishedPlaying(updateButtons)
                     }
+                    currentRecordingState = RECORDING_STATE.STOP
                 }
             }
         }
@@ -272,7 +267,7 @@ class ConversationFragment : Fragment() {
                             currentTranslatingState = TRANSLATING_STATE.START
                         }
                         TRANSLATING_STATE.START -> {
-                            translator?.stop()
+                            stopRecordingTranslator()
 
                             disableButtons(binding)
 
@@ -282,7 +277,6 @@ class ConversationFragment : Fragment() {
                                 binding.recordButton.setEnabled(true)
                                 binding.stopButton.setEnabled(false)
                                 binding.translateButton.setEnabled(true)
-                                currentTranslatingState = TRANSLATING_STATE.STOP
                             }
 
                             lifecycleScope.launch {
@@ -305,6 +299,7 @@ class ConversationFragment : Fragment() {
                                 startPlayer()
                                 resetUntilFinishedPlaying(updateButtons)
                             }
+                            currentTranslatingState = TRANSLATING_STATE.STOP
                         }
                     }
                 }
@@ -320,7 +315,7 @@ class ConversationFragment : Fragment() {
                             currentTranslatingState = TRANSLATING_STATE.START
                         }
                         TRANSLATING_STATE.START -> {
-                            translator?.stop()
+                            stopRecordingTranslator()
 
                             disableButtons(binding)
 
@@ -330,7 +325,6 @@ class ConversationFragment : Fragment() {
                                 binding.recordButton.setEnabled(true)
                                 binding.stopButton.setEnabled(true)
                                 binding.translateButton.setEnabled(true)
-                                currentTranslatingState = TRANSLATING_STATE.STOP
                             }
 
                             lifecycleScope.launch {
@@ -353,6 +347,7 @@ class ConversationFragment : Fragment() {
                                 startPlayer()
                                 resetUntilFinishedPlaying(updateButtons)
                             }
+                            currentTranslatingState = TRANSLATING_STATE.STOP
                         }
                     }
                 }
@@ -370,13 +365,8 @@ class ConversationFragment : Fragment() {
                 if (isGranted) {
                     // Permission is granted. Continue the action or workflow in your
                     // app.
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        recorder = MediaRecorder(requireContext())
-                        translator = MediaRecorder(requireContext())
-                    } else {
-                        recorder = MediaRecorder()
-                        translator = MediaRecorder()
-                    }
+                    createRecorder()
+                    createTranslator()
 
                     configureRecorder()
                     configureTranslator()
@@ -429,13 +419,8 @@ class ConversationFragment : Fragment() {
                 android.Manifest.permission.RECORD_AUDIO
             ) == PackageManager.PERMISSION_GRANTED -> {
                 // You can use the API that requires the permission.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    recorder = MediaRecorder(requireContext())
-                    translator = MediaRecorder(requireContext())
-                } else {
-                    recorder = MediaRecorder()
-                    translator = MediaRecorder()
-                }
+                createRecorder()
+                createTranslator()
 
                 configureRecorder()
                 configureTranslator()
@@ -457,6 +442,40 @@ class ConversationFragment : Fragment() {
         syntheticCacheFile.delete()
         recordingCacheFile.delete()
         translatingCacheFile.delete()
+    }
+
+    private fun createRecorder() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            recorder = MediaRecorder(requireContext())
+        } else {
+            recorder = MediaRecorder()
+        }
+    }
+
+    private fun createTranslator() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            translator = MediaRecorder(requireContext())
+        } else {
+            translator = MediaRecorder()
+        }
+    }
+
+    private fun stopRecordingRecorder() {
+        try {
+            recorder?.stop()
+        } catch (runtimeException: java.lang.RuntimeException) {
+            recordingCacheFile.delete()
+            createRecorder()
+        }
+    }
+
+    private fun stopRecordingTranslator() {
+        try {
+            translator?.stop()
+        } catch (runtimeException: java.lang.RuntimeException) {
+            translatingCacheFile.delete()
+            createTranslator()
+        }
     }
 
     private fun configureRecorder() {
