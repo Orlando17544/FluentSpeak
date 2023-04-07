@@ -44,7 +44,7 @@ interface OpenAIApiService {
 
     @Headers(
         "Host: api.openai.com",
-        "Authorization: Bearer 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"
+        "Authorization: Bearer ${ApiKeys.OPEN_AI_API_KEY}"
     )
     @Multipart
     @POST("v1/audio/translations")
@@ -55,7 +55,7 @@ interface OpenAIApiService {
 
     @Headers(
         "Host: api.openai.com",
-        "Authorization: Bearer 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"
+        "Authorization: Bearer ${ApiKeys.OPEN_AI_API_KEY}"
     )
     @POST("v1/chat/completions")
     suspend fun getChatCompletionResponse(@Body chatCompletionRequestData: ChatCompletionRequestData): ChatCompletionResponse
