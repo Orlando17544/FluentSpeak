@@ -1,5 +1,7 @@
 package com.example.android.fluentspeak
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Color
@@ -8,10 +10,7 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore.Audio.Media
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -356,8 +355,10 @@ class ConversationFragment : Fragment() {
         }
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
 
         val requestPermissionLauncher =
             registerForActivityResult(
@@ -615,5 +616,21 @@ class ConversationFragment : Fragment() {
 
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {
         return android.util.Base64.decode(encodedBase64, android.util.Base64.DEFAULT)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        val inflater: MenuInflater = inflater
+        inflater.inflate(R.menu.conversation_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_settings -> {
+                val intent = Intent(activity, SettingsActivity::class.java)
+                startActivity(intent)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

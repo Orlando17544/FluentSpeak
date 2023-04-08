@@ -5,4 +5,12 @@
     <string name="second_fragment">Topics</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="menu_settings">Settings</string>
+
+    <string name="max_tokens_hint">Max tokens</string>
+
+    <string name="presence_penalty_hint">Presence penalty</string>
+
+    <string name="frecuency_penalty_hint">Frecuency penalty</string>
 </resources>

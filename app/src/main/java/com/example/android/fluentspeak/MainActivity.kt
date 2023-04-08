@@ -5,6 +5,8 @@ import android.content.res.AssetFileDescriptor
 import android.net.Uri
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.widget.Button
 import android.widget.TextView

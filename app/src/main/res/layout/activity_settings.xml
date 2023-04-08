@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".SettingsActivity">
+
+        <TextView
+            android:id="@+id/whisper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:text="Whisper"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/whisper_temperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="24dp"
+            android:text="Temperature"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/whisper" />
+
+        <ImageView
+            android:id="@+id/whisper_temperature_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp"
+            android:src="@drawable/baseline_help_outline_24"
+            app:layout_constraintStart_toEndOf="@+id/whisper_temperature"
+            app:layout_constraintTop_toBottomOf="@+id/whisper" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/whisper_temperature_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:valueFrom="0.0"
+            android:valueTo="2.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/whisper_temperature" />
+
+        <TextView
+            android:id="@+id/chat_gpt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:text="ChatGPT"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/whisper_temperature_slider" />
+
+        <TextView
+            android:id="@+id/chat_gpt_temperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="24dp"
+            android:text="Temperature"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt" />
+
+        <ImageView
+            android:id="@+id/chat_gpt_temperature_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="32dp"
+            android:src="@drawable/baseline_help_outline_24"
+            app:layout_constraintStart_toEndOf="@+id/chat_gpt_temperature"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/chat_gpt_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:valueFrom="0.0"
+            android:valueTo="2.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_temperature" />
+
+        <TextView
+            android:id="@+id/chat_gpt_max_tokens"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="24dp"
+            android:text="Max tokens"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_slider" />
+
+        <ImageView
+            android:id="@+id/chat_gpt_max_tokens_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="24dp"
+            android:src="@drawable/baseline_help_outline_24"
+            app:layout_constraintStart_toEndOf="@+id/chat_gpt_max_tokens"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_slider" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/chat_gpt_max_tokens_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:hint="@string/max_tokens_hint"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_max_tokens">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:id="@+id/chat_gpt_presence_penalty_linear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="24dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_max_tokens_field"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chat_gpt_presence_penalty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Presence penalty"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:id="@+id/chat_gpt_presence_penalty_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/baseline_help_outline_24"/>
+
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/chat_gpt_presence_penalty_field"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="8dp"
+            android:hint="@string/presence_penalty_hint"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/chat_gpt_frecuency_penalty_field"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_presence_penalty_linear">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:id="@+id/chat_gpt_frecuency_penalty_linear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="32dp"
+            app:layout_constraintStart_toStartOf="@id/chat_gpt_frecuency_penalty_field"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_max_tokens_field">
+
+            <TextView
+                android:id="@+id/chat_gpt_frecuency_penalty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Frecuency penalty"
+                android:textSize="14sp"/>
+
+            <ImageView
+                android:id="@+id/chat_gpt_frecuency_penalty_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/baseline_help_outline_24" />
+
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/chat_gpt_frecuency_penalty_field"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="32dp"
+            android:hint="@string/frecuency_penalty_hint"
+            app:layout_constraintStart_toEndOf="@+id/chat_gpt_presence_penalty_field"
+            app:layout_constraintTop_toBottomOf="@+id/chat_gpt_presence_penalty_linear"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
