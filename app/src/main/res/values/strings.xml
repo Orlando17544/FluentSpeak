@@ -13,4 +13,15 @@
     <string name="presence_penalty_hint">Presence penalty</string>
 
     <string name="frecuency_penalty_hint">Frecuency penalty</string>
+
+    <string name="whisper_temperature">whisper_temperature</string>
+
+    <string name="chat_gpt_temperature">chat_gpt_temperature</string>
+    <string name="chat_gpt_max_tokens">chat_gpt_tokens</string>
+    <string name="chat_gpt_presence_penalty">chat_gpt_tokens</string>
+    <string name="chat_gpt_frecuency_penalty">chat_gpt_tokens</string>
+
+    <string name="text_to_speech_accent">text_to_speech_accent</string>
+    <string name="text_to_speech_gender">text_to_speech_gender</string>
+    <string name="text_to_speech_voice_name">text_to_speech_voice_name</string>
 </resources>

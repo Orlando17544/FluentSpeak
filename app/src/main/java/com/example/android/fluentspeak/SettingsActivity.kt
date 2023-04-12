@@ -11,7 +11,6 @@ import androidx.databinding.DataBindingUtil
 import com.example.android.fluentspeak.databinding.ActivitySettingsBinding
 import com.example.android.fluentspeak.network.Voice
 import com.google.android.material.textfield.TextInputLayout
-import org.w3c.dom.Text
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -92,6 +91,49 @@ class SettingsActivity : AppCompatActivity() {
             val newVoiceNameItems = filterVoices()
 
             updateVoiceNameField(newVoiceNameItems.map { it.name})
+        }
+
+        binding.save.setOnClickListener {
+            saveValueToSharedPreferences(getString(R.string.whisper_temperature), binding.whisperTemperatureSlider.value.toString())
+
+            saveValueToSharedPreferences(getString(R.string.chat_gpt_temperature), binding.chatGptTemperatureSlider.value.toString())
+            saveValueToSharedPreferences(getString(R.string.chat_gpt_max_tokens), binding.chatGptMaxTokensField.editText?.text.toString())
+            saveValueToSharedPreferences(getString(R.string.chat_gpt_presence_penalty), binding.chatGptPresencePenaltySlider.value.toString())
+            saveValueToSharedPreferences(getString(R.string.chat_gpt_frecuency_penalty), binding.chatGptFrecuencyPenaltySlider.value.toString())
+
+            saveValueToSharedPreferences(getString(R.string.text_to_speech_accent), binding.textToSpeechAccentField.editText?.text.toString())
+            saveValueToSharedPreferences(getString(R.string.text_to_speech_gender), binding.textToSpeechGenderField.editText?.text.toString())
+            saveValueToSharedPreferences(getString(R.string.text_to_speech_voice_name), binding.textToSpeechVoiceNameField.editText?.text.toString())
+        }
+    }
+
+    fun saveValueToSharedPreferences(key: String, value: String) {
+        if (value.equals("")) {
+            return
+        }
+
+        if (key.equals(getString(R.string.chat_gpt_max_tokens)) && !value.equals(Regex("^\\d+$"))) {
+            return
+        }
+
+        if (value.equals(Regex("^\\d+\\.\\d+$"))) {
+            val sharedPref = getPreferences(Context.MODE_PRIVATE) ?: return
+            with (sharedPref.edit()) {
+                putFloat(key, value.toFloat())
+                apply()
+            }
+        } else if (value.equals(Regex("^\\d+$"))) {
+            val sharedPref = getPreferences(Context.MODE_PRIVATE) ?: return
+            with (sharedPref.edit()) {
+                putInt(key, value.toInt())
+                apply()
+            }
+        } else {
+            val sharedPref = getPreferences(Context.MODE_PRIVATE) ?: return
+            with (sharedPref.edit()) {
+                putString(key, value)
+                apply()
+            }
         }
     }
 
