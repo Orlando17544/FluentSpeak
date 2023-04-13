@@ -14,14 +14,21 @@
 
     <string name="frecuency_penalty_hint">Frecuency penalty</string>
 
-    <string name="whisper_temperature">whisper_temperature</string>
 
-    <string name="chat_gpt_temperature">chat_gpt_temperature</string>
-    <string name="chat_gpt_max_tokens">chat_gpt_tokens</string>
-    <string name="chat_gpt_presence_penalty">chat_gpt_tokens</string>
-    <string name="chat_gpt_frecuency_penalty">chat_gpt_tokens</string>
+    <string name="preference_file_key">preference_file_key</string>
 
-    <string name="text_to_speech_accent">text_to_speech_accent</string>
-    <string name="text_to_speech_gender">text_to_speech_gender</string>
-    <string name="text_to_speech_voice_name">text_to_speech_voice_name</string>
+    <string name="whisper_temperature_key">whisper_temperature</string>
+
+    <string name="chat_gpt_temperature_key">chat_gpt_temperature</string>
+    <string name="chat_gpt_max_tokens_key">chat_gpt_tokens</string>
+    <string name="chat_gpt_presence_penalty_key">chat_gpt_tokens</string>
+    <string name="chat_gpt_frecuency_penalty_key">chat_gpt_tokens</string>
+
+    <string name="text_to_speech_accent_key">text_to_speech_accent</string>
+    <string name="text_to_speech_gender_key">text_to_speech_gender</string>
+    <string name="text_to_speech_voice_name_key">text_to_speech_voice_name</string>
+
+    <string name="text_to_speech_accent_default_value">en-AU</string>
+    <string name="text_to_speech_gender_default_value">FEMALE</string>
+    <string name="text_to_speech_voice_name_default_value">en-AU-Neural2-A</string>
 </resources>
