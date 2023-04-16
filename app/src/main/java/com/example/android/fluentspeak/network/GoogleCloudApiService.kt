@@ -8,9 +8,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.*
 
-
 private const val BASE_URL =
-    "https://texttospeech.googleapis.com"
+    Functions.BASE_URL
 
 private val logging: HttpLoggingInterceptor = HttpLoggingInterceptor()
     .setLevel(HttpLoggingInterceptor.Level.BODY)
@@ -31,11 +30,9 @@ private val retrofit = Retrofit.Builder()
 
 interface GoogleCloudApiService {
     @Headers(
-        "Host: texttospeech.googleapis.com",
-        "Authorization: Bearer ${ApiKeys.GOOGLE_CLOUD_API_KEY}",
-        "Content-Type: application/json; charset=utf-8"
+        "Content-Type: application/json"
     )
-    @POST("v1/text:synthesize")
+    @POST(Functions.ROUTE)
     suspend fun getTextToSpeechResponse(@Body textToSpeechRequestData: TextToSpeechRequestData): TextToSpeechResponse
 }
 

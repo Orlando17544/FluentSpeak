@@ -13,4 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
-*ApiKeys*
+ApiKeys.kt
+Functions.kt
+/firebase
