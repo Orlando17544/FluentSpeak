@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--<fraction name="whisper_temperature_default_value">0.0</fraction>-->
-    <item name="whisper_temperature_default_value" format="float" type="fraction">0.0</item>
+    <fraction name="whisper_temperature_default_value">0.0%</fraction>
 
-    <fraction name="chat_gpt_temperature_default_value">1.0</fraction>
+    <fraction name="chat_gpt_temperature_default_value">100.0%</fraction>
     <integer name="chat_gpt_max_tokens_default_value">999</integer>
-    <fraction name="chat_gpt_presence_penalty_default_value">0.0</fraction>
-    <fraction name="chat_gpt_frecuency_penalty_default_value">0.0</fraction>
+    <fraction name="chat_gpt_presence_penalty_default_value">0.0%</fraction>
+    <fraction name="chat_gpt_frecuency_penalty_default_value">0.0%</fraction>
 </resources>

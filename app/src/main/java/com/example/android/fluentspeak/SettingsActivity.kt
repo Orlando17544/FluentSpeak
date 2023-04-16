@@ -35,9 +35,12 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_settings)
 
+        voiceNameField = binding.textToSpeechVoiceNameField
+        accentField = binding.textToSpeechAccentField
+        genderField = binding.textToSpeechGenderField
+
         sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 
-        /*
         getValueFromSharedPreferences(resources.getFraction(R.fraction.whisper_temperature_default_value, 1, 1), getString(R.string.whisper_temperature_key), binding.whisperTemperatureSlider)
 
         getValueFromSharedPreferences(resources.getFraction(R.fraction.chat_gpt_temperature_default_value, 1, 1), getString(R.string.chat_gpt_temperature_key), binding.chatGptTemperatureSlider)
@@ -46,15 +49,14 @@ class SettingsActivity : AppCompatActivity() {
 
         getValueFromSharedPreferences(resources.getFraction(R.fraction.chat_gpt_frecuency_penalty_default_value, 1, 1), getString(R.string.chat_gpt_frecuency_penalty_key), binding.chatGptFrecuencyPenaltySlider)
 
-        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_accent_default_value), getString(R.string.text_to_speech_accent_key), binding.textToSpeechAccent)
-        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_gender_default_value), getString(R.string.text_to_speech_gender_key), binding.textToSpeechGender)
-        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_voice_name_default_value), getString(R.string.text_to_speech_voice_name_key), binding.textToSpeechVoiceName)*/
+        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_accent_default_value), getString(R.string.text_to_speech_accent_key), binding.textToSpeechAccentField.editText)
+        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_gender_default_value), getString(R.string.text_to_speech_gender_key), binding.textToSpeechGenderField.editText)
+        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_voice_name_default_value), getString(R.string.text_to_speech_voice_name_key), binding.textToSpeechVoiceNameField.editText)
+
+        voiceNameAccentFilter = accentField.editText?.text.toString()
+        voiceNameGenderFilter = genderField.editText?.text.toString()
 
         setupListeners()
-
-        voiceNameField = binding.textToSpeechVoiceNameField
-        accentField = binding.textToSpeechAccentField
-        genderField = binding.textToSpeechGenderField
 
         val accentItems = TextToSpeechSettingsData.VOICES.map { it.languageCode }.distinct()
         val accentAdapter = ArrayAdapter(this, R.layout.item, accentItems)
@@ -64,7 +66,9 @@ class SettingsActivity : AppCompatActivity() {
         val genderAdapter = ArrayAdapter(this, R.layout.item, genderItems)
         (genderField.editText as? AutoCompleteTextView)?.setAdapter(genderAdapter)
 
-        updateVoiceNameField(TextToSpeechSettingsData.VOICES.map { it.name })
+        val newVoiceItems = filterVoices()
+
+        updateVoiceNameField(newVoiceItems.map { it.name })
 
         (accentField.editText as AutoCompleteTextView).setOnItemClickListener { adapterView, view, position, id ->
             voiceNameAccentFilter = ((view as TextView).text as String)
@@ -72,6 +76,7 @@ class SettingsActivity : AppCompatActivity() {
             val newVoiceItems = filterVoices()
 
             updateVoiceNameField(newVoiceItems.map { it.name })
+            cleanVoiceNameField()
         }
 
         (genderField.editText as AutoCompleteTextView).setOnItemClickListener { adapterView, view, position, id ->
@@ -80,6 +85,7 @@ class SettingsActivity : AppCompatActivity() {
             val newVoiceNameItems = filterVoices()
 
             updateVoiceNameField(newVoiceNameItems.map { it.name})
+            cleanVoiceNameField()
         }
 
         binding.save.setOnClickListener {
@@ -122,6 +128,9 @@ class SettingsActivity : AppCompatActivity() {
     fun updateVoiceNameField(voiceNameItems: List<String>) {
         val voiceNameAdapter = ArrayAdapter(this, R.layout.item, voiceNameItems)
         (voiceNameField.editText as? AutoCompleteTextView)?.setAdapter(voiceNameAdapter)
+    }
+
+    fun cleanVoiceNameField() {
         (voiceNameField.editText as? AutoCompleteTextView)?.setText("")
     }
 
