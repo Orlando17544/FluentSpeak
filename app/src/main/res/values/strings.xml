@@ -28,6 +28,8 @@
     <string name="text_to_speech_gender_key">text_to_speech_gender</string>
     <string name="text_to_speech_voice_name_key">text_to_speech_voice_name</string>
 
+    <string name="first_start_key">first_start_key</string>
+
     <string name="text_to_speech_accent_default_value">en-AU</string>
     <string name="text_to_speech_gender_default_value">FEMALE</string>
     <string name="text_to_speech_voice_name_default_value">en-AU-Neural2-A</string>
