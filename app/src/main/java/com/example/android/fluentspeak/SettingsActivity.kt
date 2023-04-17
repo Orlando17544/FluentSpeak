@@ -16,6 +16,7 @@ import androidx.databinding.DataBindingUtil
 import com.example.android.fluentspeak.databinding.ActivitySettingsBinding
 import com.example.android.fluentspeak.network.Voice
 import com.google.android.material.slider.Slider
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 
 class SettingsActivity : AppCompatActivity() {
@@ -58,17 +59,24 @@ class SettingsActivity : AppCompatActivity() {
         setupFieldListeners()
 
         binding.save.setOnClickListener {
-            if (binding.chatGptMaxTokensField.editText?.text.toString()
-                    .equals("") || binding.textToSpeechVoiceNameField.editText?.text.toString()
-                    .equals("")
-            ) {
+            if (binding.chatGptMaxTokensField.editText?.text.toString().equals("")
+                && binding.textToSpeechVoiceNameField.editText?.text.toString().equals("")) {
                 binding.chatGptMaxTokensField.error = getString(R.string.chat_gpt_max_tokens_error)
-                binding.textToSpeechVoiceNameField.error =
-                    getString(R.string.text_to_speech_voice_name_error)
+                binding.textToSpeechVoiceNameField.error = getString(R.string.text_to_speech_voice_name_error)
+                Snackbar.make(it, R.string.save_preferences_failed_message, Snackbar.LENGTH_SHORT).show()
+            } else if (binding.chatGptMaxTokensField.editText?.text.toString().equals("")) {
+                binding.chatGptMaxTokensField.error = getString(R.string.chat_gpt_max_tokens_error)
+                binding.textToSpeechVoiceNameField.error = null
+                Snackbar.make(it, R.string.save_preferences_failed_message, Snackbar.LENGTH_SHORT).show()
+            } else if (binding.textToSpeechVoiceNameField.editText?.text.toString().equals("")) {
+                binding.textToSpeechVoiceNameField.error = getString(R.string.text_to_speech_voice_name_error)
+                binding.chatGptMaxTokensField.error = null
+                Snackbar.make(it, R.string.save_preferences_failed_message, Snackbar.LENGTH_SHORT).show()
             } else {
                 saveValuesToSharedPreferences()
                 binding.chatGptMaxTokensField.error = null
                 binding.textToSpeechVoiceNameField.error = null
+                Snackbar.make(it, R.string.save_preferences_successful_message, Snackbar.LENGTH_SHORT).show()
             }
         }
     }

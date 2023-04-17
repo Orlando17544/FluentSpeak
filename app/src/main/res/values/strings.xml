@@ -47,4 +47,7 @@
     <string name="text_to_speech_accent_hint">AU means Australian\nIN means Indian\nGB means Great Britain</string>
     <string name="text_to_speech_gender_hint">Male voice or Female voice</string>
     <string name="text_to_speech_voice_name_hint">The voice name that match with the accent and gender previously selected</string>
+
+    <string name="save_preferences_successful_message">The preferences have been saved</string>
+    <string name="save_preferences_failed_message">You have left an empty field</string>
 </resources>
