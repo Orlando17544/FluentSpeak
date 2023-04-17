@@ -1,5 +1,7 @@
 package com.example.android.fluentspeak
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.*
 import com.example.android.fluentspeak.network.*
