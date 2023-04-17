@@ -17,20 +17,34 @@
 
     <string name="preference_file_key">preference_file_key</string>
 
-    <string name="whisper_temperature_key">whisper_temperature</string>
+    <string name="whisper_temperature_key">whisper_temperature_key</string>
 
-    <string name="chat_gpt_temperature_key">chat_gpt_temperature</string>
-    <string name="chat_gpt_max_tokens_key">chat_gpt_tokens</string>
-    <string name="chat_gpt_presence_penalty_key">chat_gpt_tokens</string>
-    <string name="chat_gpt_frecuency_penalty_key">chat_gpt_tokens</string>
+    <string name="chat_gpt_temperature_key">chat_gpt_temperature_key</string>
+    <string name="chat_gpt_max_tokens_key">chat_gpt_max_tokens_key</string>
+    <string name="chat_gpt_presence_penalty_key">chat_gpt_presence_penalty_key</string>
+    <string name="chat_gpt_frecuency_penalty_key">chat_gpt_frecuency_penalty_key</string>
 
-    <string name="text_to_speech_accent_key">text_to_speech_accent</string>
-    <string name="text_to_speech_gender_key">text_to_speech_gender</string>
-    <string name="text_to_speech_voice_name_key">text_to_speech_voice_name</string>
+    <string name="text_to_speech_accent_key">text_to_speech_accent_key</string>
+    <string name="text_to_speech_gender_key">text_to_speech_gender_key</string>
+    <string name="text_to_speech_voice_name_key">text_to_speech_voice_name_key</string>
 
     <string name="first_start_key">first_start_key</string>
 
     <string name="text_to_speech_accent_default_value">en-AU</string>
     <string name="text_to_speech_gender_default_value">FEMALE</string>
     <string name="text_to_speech_voice_name_default_value">en-AU-Neural2-A</string>
+
+    <string name="chat_gpt_max_tokens_error">It can\'t be empty</string>
+    <string name="text_to_speech_voice_name_error">It can\'t be empty</string>
+
+    <string name="whisper_temperature_hint">The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use log probability to automatically increase the temperature until certain thresholds are hit.</string>
+
+    <string name="chat_gpt_temperature_hint">What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\n\nWe generally recommend altering this or top_p but not both.</string>
+    <string name="chat_gpt_max_tokens_hint">The maximum number of tokens to generate in the chat completion.\n\nThe total length of input tokens and generated tokens is limited by the model\'s context length.</string>
+    <string name="chat_gpt_presence_penalty_hint">Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model\'s likelihood to talk about new topics.</string>
+    <string name="chat_gpt_frecuency_penalty_hint">Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model\'s likelihood to repeat the same line verbatim.</string>-->
+
+    <string name="text_to_speech_accent_hint">AU means Australian\nIN means Indian\nGB means Great Britain</string>
+    <string name="text_to_speech_gender_hint">Male voice or Female voice</string>
+    <string name="text_to_speech_voice_name_hint">The voice name that match with the accent and gender previously selected</string>
 </resources>

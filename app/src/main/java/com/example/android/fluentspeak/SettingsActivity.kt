@@ -39,89 +39,77 @@ class SettingsActivity : AppCompatActivity() {
         accentField = binding.textToSpeechAccentField
         genderField = binding.textToSpeechGenderField
 
-        sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        sharedPref =
+            getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 
-        getValueFromSharedPreferences(resources.getFraction(R.fraction.whisper_temperature_default_value, 1, 1), getString(R.string.whisper_temperature_key), binding.whisperTemperatureSlider)
-
-        getValueFromSharedPreferences(resources.getFraction(R.fraction.chat_gpt_temperature_default_value, 1, 1), getString(R.string.chat_gpt_temperature_key), binding.chatGptTemperatureSlider)
-        getValueFromSharedPreferences(resources.getInteger(R.integer.chat_gpt_max_tokens_default_value), getString(R.string.chat_gpt_max_tokens_key), binding.chatGptMaxTokensField.editText)
-        getValueFromSharedPreferences(resources.getFraction(R.fraction.chat_gpt_presence_penalty_default_value, 1, 1), getString(R.string.chat_gpt_presence_penalty_key), binding.chatGptPresencePenaltySlider)
-
-        getValueFromSharedPreferences(resources.getFraction(R.fraction.chat_gpt_frecuency_penalty_default_value, 1, 1), getString(R.string.chat_gpt_frecuency_penalty_key), binding.chatGptFrecuencyPenaltySlider)
-
-        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_accent_default_value), getString(R.string.text_to_speech_accent_key), binding.textToSpeechAccentField.editText)
-        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_gender_default_value), getString(R.string.text_to_speech_gender_key), binding.textToSpeechGenderField.editText)
-        getValueFromSharedPreferences(resources.getString(R.string.text_to_speech_voice_name_default_value), getString(R.string.text_to_speech_voice_name_key), binding.textToSpeechVoiceNameField.editText)
+        getValuesFromSharedPreferences()
 
         voiceNameAccentFilter = accentField.editText?.text.toString()
         voiceNameGenderFilter = genderField.editText?.text.toString()
 
-        setupListeners()
+        setupHintListeners()
 
-        val accentItems = TextToSpeechSettingsData.VOICES.map { it.languageCode }.distinct()
-        val accentAdapter = ArrayAdapter(this, R.layout.item, accentItems)
-        (accentField.editText as? AutoCompleteTextView)?.setAdapter(accentAdapter)
-
-        val genderItems = TextToSpeechSettingsData.VOICES.map { it.ssmlGender }.distinct()
-        val genderAdapter = ArrayAdapter(this, R.layout.item, genderItems)
-        (genderField.editText as? AutoCompleteTextView)?.setAdapter(genderAdapter)
+        setupAdapters()
 
         val newVoiceItems = filterVoices()
 
         updateVoiceNameField(newVoiceItems.map { it.name })
 
-        (accentField.editText as AutoCompleteTextView).setOnItemClickListener { adapterView, view, position, id ->
-            voiceNameAccentFilter = ((view as TextView).text as String)
-
-            val newVoiceItems = filterVoices()
-
-            updateVoiceNameField(newVoiceItems.map { it.name })
-            cleanVoiceNameField()
-        }
-
-        (genderField.editText as AutoCompleteTextView).setOnItemClickListener { adapterView, view, position, id ->
-            voiceNameGenderFilter = ((view as TextView).text as String)
-
-            val newVoiceNameItems = filterVoices()
-
-            updateVoiceNameField(newVoiceNameItems.map { it.name})
-            cleanVoiceNameField()
-        }
+        setupFieldListeners()
 
         binding.save.setOnClickListener {
-            saveValueToSharedPreferences(getString(R.string.whisper_temperature_key), binding.whisperTemperatureSlider.value)
-
-            saveValueToSharedPreferences(getString(R.string.chat_gpt_temperature_key), binding.chatGptTemperatureSlider.value)
-            saveValueToSharedPreferences(getString(R.string.chat_gpt_max_tokens_key), binding.chatGptMaxTokensField.editText?.text.toString())
-            saveValueToSharedPreferences(getString(R.string.chat_gpt_presence_penalty_key), binding.chatGptPresencePenaltySlider.value)
-            saveValueToSharedPreferences(getString(R.string.chat_gpt_frecuency_penalty_key), binding.chatGptFrecuencyPenaltySlider.value)
-
-            saveValueToSharedPreferences(getString(R.string.text_to_speech_accent_key), binding.textToSpeechAccentField.editText?.text.toString())
-            saveValueToSharedPreferences(getString(R.string.text_to_speech_gender_key), binding.textToSpeechGenderField.editText?.text.toString())
-            saveValueToSharedPreferences(getString(R.string.text_to_speech_voice_name_key), binding.textToSpeechVoiceNameField.editText?.text.toString())
+            if (binding.chatGptMaxTokensField.editText?.text.toString()
+                    .equals("") || binding.textToSpeechVoiceNameField.editText?.text.toString()
+                    .equals("")
+            ) {
+                binding.chatGptMaxTokensField.error = getString(R.string.chat_gpt_max_tokens_error)
+                binding.textToSpeechVoiceNameField.error =
+                    getString(R.string.text_to_speech_voice_name_error)
+            } else {
+                saveValuesToSharedPreferences()
+                binding.chatGptMaxTokensField.error = null
+                binding.textToSpeechVoiceNameField.error = null
+            }
         }
     }
 
-    fun saveValueToSharedPreferences(key: String, value: Any) {
-        if (value.equals("")) {
-            return
-        }
+    fun saveValuesToSharedPreferences() {
+        with(sharedPref.edit()) {
+            putFloat(
+                getString(R.string.whisper_temperature_key),
+                binding.whisperTemperatureSlider.value
+            )
 
-        if (value is Float) {
-            with (sharedPref.edit()) {
-                putFloat(key, value)
-                apply()
-            }
-        } else if (value is Int) {
-            with (sharedPref.edit()) {
-                putInt(key, value)
-                apply()
-            }
-        } else if (value is String) {
-            with (sharedPref.edit()) {
-                putString(key, value)
-                apply()
-            }
+            putFloat(
+                getString(R.string.chat_gpt_temperature_key),
+                binding.chatGptTemperatureSlider.value
+            )
+            putInt(
+                getString(R.string.chat_gpt_max_tokens_key),
+                binding.chatGptMaxTokensField.editText?.text.toString().toInt()
+            )
+            putFloat(
+                getString(R.string.chat_gpt_presence_penalty_key),
+                binding.chatGptPresencePenaltySlider.value
+            )
+            putFloat(
+                getString(R.string.chat_gpt_frecuency_penalty_key),
+                binding.chatGptFrecuencyPenaltySlider.value
+            )
+
+            putString(
+                getString(R.string.text_to_speech_accent_key),
+                binding.textToSpeechAccentField.editText?.text.toString()
+            )
+            putString(
+                getString(R.string.text_to_speech_gender_key),
+                binding.textToSpeechGenderField.editText?.text.toString()
+            )
+            putString(
+                getString(R.string.text_to_speech_voice_name_key),
+                binding.textToSpeechVoiceNameField.editText?.text.toString()
+            )
+            apply()
         }
     }
 
@@ -144,54 +132,121 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    fun getValueFromSharedPreferences(defaultValue: Any, key: String, view: View?) {
-        if (defaultValue is Float) {
-            val savedValue = sharedPref.getFloat(key, defaultValue)
-            (view as Slider).value = savedValue
-        } else if (defaultValue is Int) {
-            val savedValue = sharedPref.getInt(key, defaultValue)
-            (view as EditText).setText(savedValue.toString())
-        } else if (defaultValue is String) {
-            val savedValue = sharedPref.getString(key, defaultValue)
-            (view as EditText).setText(savedValue)
-        }
+    fun getValuesFromSharedPreferences() {
+        binding.whisperTemperatureSlider.value =
+            sharedPref.getFloat(getString(R.string.whisper_temperature_key), 0.0f)
+
+        binding.chatGptTemperatureSlider.value =
+            sharedPref.getFloat(getString(R.string.chat_gpt_temperature_key), 0.0f)
+        binding.chatGptMaxTokensField.editText?.setText(
+            sharedPref.getInt(
+                getString(R.string.chat_gpt_max_tokens_key),
+                0
+            ).toString()
+        )
+        binding.chatGptPresencePenaltySlider.value =
+            sharedPref.getFloat(getString(R.string.chat_gpt_presence_penalty_key), 0.0f)
+        binding.chatGptFrecuencyPenaltySlider.value =
+            sharedPref.getFloat(getString(R.string.chat_gpt_frecuency_penalty_key), 0.0f)
+
+        binding.textToSpeechAccentField.editText?.setText(
+            sharedPref.getString(
+                getString(R.string.text_to_speech_accent_key),
+                ""
+            )
+        )
+        binding.textToSpeechGenderField.editText?.setText(
+            sharedPref.getString(
+                getString(R.string.text_to_speech_gender_key),
+                ""
+            )
+        )
+        binding.textToSpeechVoiceNameField.editText?.setText(
+            sharedPref.getString(
+                getString(R.string.text_to_speech_voice_name_key),
+                ""
+            )
+        )
     }
 
-    fun setupListeners() {
+    fun setupHintListeners() {
         binding.whisperTemperatureImage.setOnClickListener {
-            Toast.makeText(this, "The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use log probability to automatically increase the temperature until certain thresholds are hit.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.whisper_temperature_hint), Toast.LENGTH_LONG)
+                .show()
         }
 
         binding.chatGptTemperatureImage.setOnClickListener {
-            Toast.makeText(this, "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\n" +
-                    "\n" +
-                    "We generally recommend altering this or top_p but not both.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.chat_gpt_temperature_hint), Toast.LENGTH_LONG)
+                .show()
         }
 
         binding.chatGptMaxTokensImage.setOnClickListener {
-            Toast.makeText(this, "The maximum number of tokens to generate in the chat completion.\n" +
-                    "\n" +
-                    "The total length of input tokens and generated tokens is limited by the model's context length.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.chat_gpt_max_tokens_hint), Toast.LENGTH_LONG)
+                .show()
         }
 
         binding.chatGptPresencePenaltyImage.setOnClickListener {
-            Toast.makeText(this, "Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                getString(R.string.chat_gpt_presence_penalty_hint),
+                Toast.LENGTH_LONG
+            ).show()
         }
 
         binding.chatGptFrecuencyPenaltyImage.setOnClickListener {
-            Toast.makeText(this, "Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                getString(R.string.chat_gpt_frecuency_penalty_hint),
+                Toast.LENGTH_LONG
+            ).show()
         }
 
         binding.textToSpeechAccentImage.setOnClickListener {
-            Toast.makeText(this, "AU means Australian\nIN means Indian\nGB means Great Britain", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.text_to_speech_accent_hint), Toast.LENGTH_LONG)
+                .show()
         }
 
         binding.textToSpeechGenderImage.setOnClickListener {
-            Toast.makeText(this, "Male voice or Female voice", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.text_to_speech_gender_hint), Toast.LENGTH_LONG)
+                .show()
         }
 
         binding.textToSpeechVoiceNameImage.setOnClickListener {
-            Toast.makeText(this, "The voice name that match with the accent and gender previously selected", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                getString(R.string.text_to_speech_voice_name_hint),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    fun setupAdapters() {
+        val accentItems = TextToSpeechSettingsData.VOICES.map { it.languageCode }.distinct()
+        val accentAdapter = ArrayAdapter(this, R.layout.item, accentItems)
+        (accentField.editText as? AutoCompleteTextView)?.setAdapter(accentAdapter)
+
+        val genderItems = TextToSpeechSettingsData.VOICES.map { it.ssmlGender }.distinct()
+        val genderAdapter = ArrayAdapter(this, R.layout.item, genderItems)
+        (genderField.editText as? AutoCompleteTextView)?.setAdapter(genderAdapter)
+    }
+
+    fun setupFieldListeners() {
+        (accentField.editText as AutoCompleteTextView).setOnItemClickListener { adapterView, view, position, id ->
+            voiceNameAccentFilter = ((view as TextView).text as String)
+
+            val newVoiceItems = filterVoices()
+
+            updateVoiceNameField(newVoiceItems.map { it.name })
+            cleanVoiceNameField()
+        }
+
+        (genderField.editText as AutoCompleteTextView).setOnItemClickListener { adapterView, view, position, id ->
+            voiceNameGenderFilter = ((view as TextView).text as String)
+
+            val newVoiceNameItems = filterVoices()
+
+            updateVoiceNameField(newVoiceNameItems.map { it.name })
+            cleanVoiceNameField()
         }
     }
 }
