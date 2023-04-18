@@ -58,7 +58,7 @@ class SettingsActivity : AppCompatActivity() {
 
         setupFieldListeners()
 
-        binding.save.setOnClickListener {
+        binding.saveButton.setOnClickListener {
             if (binding.chatGptMaxTokensField.editText?.text.toString().equals("")
                 && binding.textToSpeechVoiceNameField.editText?.text.toString().equals("")) {
                 binding.chatGptMaxTokensField.error = getString(R.string.chat_gpt_max_tokens_error)

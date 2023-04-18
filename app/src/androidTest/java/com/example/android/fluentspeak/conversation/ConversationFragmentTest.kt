@@ -164,6 +164,7 @@ class ConversationFragmentTest {
         onView(withId(R.id.record_button)).perform(click(), click())
         Thread.sleep(MILLISECONDS)
         onView(withId(R.id.translate_button)).perform(click())
+        Thread.sleep(MILLISECONDS)
 
         // Then
         onView(withId(R.id.record_button)).check(matches(isNotEnabled()))
@@ -191,7 +192,7 @@ class ConversationFragmentTest {
 
         onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
     }
-/*
+
     @Test
     fun setupListeners_twoClicksRecordButtonTwoClicksTranslateButtonOneClickStopButton_recordButtonEnabledStopButtonDisabledTranslateButtonEnabled() {
         // Given
@@ -203,6 +204,7 @@ class ConversationFragmentTest {
         onView(withId(R.id.translate_button)).perform(click(), click())
         Thread.sleep(MILLISECONDS)
         onView(withId(R.id.stop_button)).perform(click())
+        Thread.sleep(MILLISECONDS)
 
         // Then
         onView(withId(R.id.record_button)).check(matches(isEnabled()))
@@ -213,7 +215,7 @@ class ConversationFragmentTest {
         onView(withText("chatgpt")).check(isCompletelyBelow(withText("whisper")))
         onView(withText("chatgpt")).check(isCompletelyLeftOf(withText("whisper")))
     }
-*/
+
     @Test
     fun setupListeners_twoClicksRecordButtonOneClickStopButton_recordButtonEnabledStopButtonDisabledTranslateButtonEnabled() {
         // Given
@@ -248,6 +250,7 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).perform(click())
         Thread.sleep(MILLISECONDS)
         onView(withId(R.id.record_button)).perform(click())
+        Thread.sleep(MILLISECONDS)
 
         // Then
         onView(withId(R.id.record_button)).check(matches(isEnabled()))
@@ -270,6 +273,7 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).perform(click())
         Thread.sleep(MILLISECONDS)
         onView(withId(R.id.record_button)).perform(click())
+        Thread.sleep(MILLISECONDS)
 
         // Then
         onView(withId(R.id.record_button)).check(matches(isEnabled()))
@@ -397,7 +401,7 @@ class ConversationFragmentTest {
     }
 
     @Test
-    fun setupListeners_twoClicksRecordButtonOneClickRecordButton_noSetDataSourceFDFailedError() {
+    fun setupListeners_executeWithoutDataSource_noSetDataSourceFDFailedError() {
         // Given
         val scenario = launchFragmentInContainer<ConversationFragment>(themeResId = R.style.Theme_FluentSpeak)
 
