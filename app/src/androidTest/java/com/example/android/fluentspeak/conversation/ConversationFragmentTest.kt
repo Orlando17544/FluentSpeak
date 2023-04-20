@@ -100,7 +100,7 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
     }
 
     @Test
@@ -150,9 +150,9 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isNotEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
-        onView(withText("chatgpt")).check(isCompletelyBelow(withText("whisper")))
-        onView(withText("chatgpt")).check(isCompletelyLeftOf(withText("whisper")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("A: whisper1")).check(isCompletelyBelow(withText("whisper1")))
+        onView(withText("A: whisper1")).check(isCompletelyLeftOf(withText("whisper1")))
     }
 
     @Test
@@ -171,7 +171,7 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isNotEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
     }
 
     @Test
@@ -190,7 +190,7 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
     }
 
     @Test
@@ -211,9 +211,9 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isNotEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
-        onView(withText("chatgpt")).check(isCompletelyBelow(withText("whisper")))
-        onView(withText("chatgpt")).check(isCompletelyLeftOf(withText("whisper")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("A: whisper1")).check(isCompletelyBelow(withText("whisper1")))
+        onView(withText("A: whisper1")).check(isCompletelyLeftOf(withText("whisper1")))
     }
 
     @Test
@@ -232,9 +232,9 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isNotEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
-        onView(withText("chatgpt")).check(isCompletelyBelow(withText("whisper")))
-        onView(withText("chatgpt")).check(isCompletelyLeftOf(withText("whisper")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("A: whisper1")).check(isCompletelyBelow(withText("whisper1")))
+        onView(withText("A: whisper1")).check(isCompletelyLeftOf(withText("whisper1")))
     }
 
     @Test
@@ -257,9 +257,9 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isNotEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
-        onView(withText("chatgpt")).check(isCompletelyBelow(withText("whisper")))
-        onView(withText("chatgpt")).check(isCompletelyLeftOf(withText("whisper")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("A: whisper1")).check(isCompletelyBelow(withText("whisper1")))
+        onView(withText("A: whisper1")).check(isCompletelyLeftOf(withText("whisper1")))
     }
 
     @Test
@@ -280,9 +280,9 @@ class ConversationFragmentTest {
         onView(withId(R.id.stop_button)).check(matches(isEnabled()))
         onView(withId(R.id.translate_button)).check(matches(isNotEnabled()))
 
-        onView(withText("whisper")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
-        onView(withText("chatgpt")).check(isCompletelyBelow(withText("whisper")))
-        onView(withText("chatgpt")).check(isCompletelyLeftOf(withText("whisper")))
+        onView(withText("whisper1")).check(isCompletelyBelow(withText("You are a helpful assistant.")))
+        onView(withText("A: whisper1")).check(isCompletelyBelow(withText("whisper1")))
+        onView(withText("A: whisper1")).check(isCompletelyLeftOf(withText("whisper1")))
     }
 
     @Test
@@ -411,5 +411,20 @@ class ConversationFragmentTest {
         }
 
         // Then
+    }
+
+    @Test
+    fun setupListeners_fourClicksRecordButtonOneClickStopButton_getChatCompletionResponseReceivesPromptWithoutTrailingSpaces() {
+        // Given
+        launchFragmentInContainer<ConversationFragment>(themeResId = R.style.Theme_FluentSpeak)
+
+        // When
+        onView(withId(R.id.record_button)).perform(click(), click(), click(), click())
+        Thread.sleep(MILLISECONDS)
+        onView(withId(R.id.stop_button)).perform(click())
+        Thread.sleep(MILLISECONDS)
+
+        // Then
+        onView(withText("A: whisper1 whisper10")).check(isCompletelyBelow(withText("whisper10")))
     }
 }
