@@ -37,7 +37,6 @@ android {
 }
 
 dependencies {
-
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
@@ -99,4 +98,6 @@ dependencies {
 
     debugImplementation "androidx.fragment:fragment-testing:$fragmentVersion"
     implementation "androidx.test:core:$androidXTestCoreVersion"
+
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'
 }
