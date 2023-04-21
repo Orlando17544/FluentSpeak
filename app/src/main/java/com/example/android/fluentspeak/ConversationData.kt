@@ -14,4 +14,8 @@ object ConversationData {
 
         messages.add(message)
     }
+
+    fun cleanMessages() {
+        messages.clear()
+    }
 }

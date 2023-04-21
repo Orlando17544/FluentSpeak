@@ -11,7 +11,6 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore.Audio.Media
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -58,7 +57,7 @@ class ConversationFragment : Fragment() {
     private lateinit var translatingCacheFile: File
     private lateinit var syntheticCacheFile: File
 
-    private lateinit var chatLayout: LinearLayout
+    private var chatLayout: LinearLayout? = null
 
     private val viewModel: ConversationViewModel by viewModels<ConversationViewModel> {
         ConversationViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
@@ -72,7 +71,6 @@ class ConversationFragment : Fragment() {
         val binding = FragmentConversationBinding.inflate(inflater)
 
         chatLayout = binding.chatLayout
-
 
         val message = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a helpful assistant.")
 
@@ -446,6 +444,8 @@ class ConversationFragment : Fragment() {
         syntheticCacheFile.delete()
         recordingCacheFile.delete()
         translatingCacheFile.delete()
+
+        chatLayout = null
     }
 
     private fun createRecorder() {
@@ -609,7 +609,7 @@ class ConversationFragment : Fragment() {
 
         messageView.layoutParams = layoutParams
 
-        chatLayout.addView(messageView)
+        chatLayout?.addView(messageView)
 
         messageView.id = (1000..9000).random()
 

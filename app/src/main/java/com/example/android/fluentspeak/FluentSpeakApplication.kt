@@ -2,8 +2,8 @@ package com.example.android.fluentspeak
 
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
 import com.example.android.fluentspeak.network.ApisRepository
+import leakcanary.AppWatcher
 
 class FluentSpeakApplication: Application() {
 
