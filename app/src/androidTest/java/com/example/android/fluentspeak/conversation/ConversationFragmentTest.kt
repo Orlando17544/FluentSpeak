@@ -14,6 +14,7 @@ import com.example.android.fluentspeak.*
 import com.example.android.fluentspeak.network.ApisRepository
 import com.example.android.fluentspeak.network.Message
 import org.hamcrest.Matchers.allOf
+import org.junit.After
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
@@ -31,6 +32,11 @@ class ConversationFragmentTest {
     fun initRepository() {
         repository = ApisRepository(FakeOpenAIApi(), FakeGoogleCloudApi())
         ServiceLocator.apisRepository = repository
+    }
+
+    @After
+    fun cleanupConversationData() {
+        ConversationData.cleanMessages()
     }
 
     @Test
