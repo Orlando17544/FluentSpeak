@@ -491,6 +491,10 @@ class ConversationFragment : Fragment() {
         syntheticCacheFile.delete()
         recordingCacheFile.delete()
         translatingCacheFile.delete()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
 
         chatLayout = null
     }
