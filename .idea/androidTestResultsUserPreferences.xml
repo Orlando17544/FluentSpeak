@@ -494,6 +494,20 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+        <entry key="1988155629">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="HUAWEI&#10; AMN-LX3" value="120" />
+                  <entry key="MXRNU19B13105468" value="120" />
+                  <entry key="Tests" value="360" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
         <entry key="2008699524">
           <value>
             <AndroidTestResultsTableState>

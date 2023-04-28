@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Color
@@ -59,6 +60,8 @@ class ConversationFragment : Fragment() {
 
     private var chatLayout: LinearLayout? = null
 
+    lateinit var sharedPref: SharedPreferences
+
     private val viewModel: ConversationViewModel by viewModels<ConversationViewModel> {
         ConversationViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
     }
@@ -69,6 +72,8 @@ class ConversationFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val binding = FragmentConversationBinding.inflate(inflater)
+
+        sharedPref = context?.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)!!
 
         chatLayout = binding.chatLayout
 
@@ -102,7 +107,11 @@ class ConversationFragment : Fragment() {
 
                     lifecycleScope.launch {
                         val transcriptionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTranscriptionResponse(TranscriptionRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
+                            viewModel.getTranscriptionResponse(TranscriptionRequestData(
+                                file = recordingCacheFile,
+                                prompt = viewModel.unfinishedUserMessage.content,
+                                temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
+                            ))
                         }
 
                         configureRecorder()
@@ -155,7 +164,11 @@ class ConversationFragment : Fragment() {
 
                     lifecycleScope.launch {
                         val transcriptionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTranscriptionResponse(TranscriptionRequestData(file = recordingCacheFile, prompt = viewModel.unfinishedUserMessage.content))
+                            viewModel.getTranscriptionResponse(TranscriptionRequestData(
+                                file = recordingCacheFile,
+                                prompt = viewModel.unfinishedUserMessage.content,
+                                temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
+                            ))
                         }
 
                         configureRecorder()
@@ -172,7 +185,13 @@ class ConversationFragment : Fragment() {
                         val messages = ConversationData.messages
 
                         val chatCompletionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(messages = messages))
+                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(
+                                messages = messages,
+                                temperature = sharedPref.getFloat(context?.getString(R.string.chat_gpt_temperature_key), 0.0f),
+                                maxTokens = sharedPref.getInt(context?.getString(R.string.chat_gpt_max_tokens_key), 0),
+                                presencePenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_presence_penalty_key), 0.0f),
+                                frequencyPenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_frecuency_penalty_key), 0.0f),
+                            ))
                         }
 
                         val chatCompletionMessage = Message(
@@ -185,7 +204,11 @@ class ConversationFragment : Fragment() {
                         addMessageToView(chatCompletionMessage)
 
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content)))
+                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content), Voice(
+                                sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
+                                sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
+                                sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
+                                )))
                         }
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -220,7 +243,13 @@ class ConversationFragment : Fragment() {
 
                     lifecycleScope.launch {
                         val chatCompletionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(messages = messages))
+                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(
+                                messages = messages,
+                                temperature = sharedPref.getFloat(context?.getString(R.string.chat_gpt_temperature_key), 0.0f),
+                                maxTokens = sharedPref.getInt(context?.getString(R.string.chat_gpt_max_tokens_key), 0),
+                                presencePenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_presence_penalty_key), 0.0f),
+                                frequencyPenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_frecuency_penalty_key), 0.0f),
+                            ))
                         }
 
                         val chatCompletionMessage = Message(
@@ -233,7 +262,11 @@ class ConversationFragment : Fragment() {
                         addMessageToView(chatCompletionMessage)
 
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content)))
+                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content), Voice(
+                                sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
+                                sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
+                                sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
+                            )))
                         }
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -281,13 +314,20 @@ class ConversationFragment : Fragment() {
 
                             lifecycleScope.launch {
                                 val translationResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTranslationResponse(TranslationRequestData(file = translatingCacheFile))
+                                    viewModel.getTranslationResponse(TranslationRequestData(
+                                        file = translatingCacheFile,
+                                        temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
+                                    ))
                                 }
 
                                 configureTranslator()
 
                                 val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text)))
+                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text), Voice(
+                                        sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
+                                        sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
+                                        sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
+                                    )))
                                 }
 
                                 val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -329,13 +369,20 @@ class ConversationFragment : Fragment() {
 
                             lifecycleScope.launch {
                                 val translationResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTranslationResponse(TranslationRequestData(file = translatingCacheFile))
+                                    viewModel.getTranslationResponse(TranslationRequestData(
+                                        file = translatingCacheFile,
+                                        temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
+                                    ))
                                 }
 
                                 configureTranslator()
 
                                 val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text)))
+                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text), Voice(
+                                        sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
+                                        sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
+                                        sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
+                                    )))
                                 }
 
                                 val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
