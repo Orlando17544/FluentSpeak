@@ -17,6 +17,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.NavigationUI
+import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.slider.Slider
@@ -34,6 +38,8 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var sharedPref: SharedPreferences
 
+    lateinit var navController: NavController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,35 +52,12 @@ class MainActivity : AppCompatActivity() {
             saveDefaultValuesToSharedPreferences()
         }
 
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_container) as NavHostFragment
+        navController = navHostFragment.navController
+
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when(item.itemId) {
-                R.id.page_1 -> {
-                    // Respond to navigation item 1 click
-                    val fragment = ConversationFragment()
-
-                    val transaction = supportFragmentManager.beginTransaction()
-                    transaction.replace(R.id.container, fragment)
-                    transaction.addToBackStack(null)
-                    transaction.commit()
-                    true
-                }
-                R.id.page_2 -> {
-                    // Respond to navigation item 2 click
-                    val fragment = TopicsFragment()
-
-                    val transaction = supportFragmentManager.beginTransaction()
-                    transaction.replace(R.id.container, fragment)
-                    transaction.addToBackStack(null)
-                    transaction.commit()
-                    true
-                }
-                else -> false
-            }
-        }
-
-        bottomNavigation.selectedItemId = R.id.page_1
+        NavigationUI.setupWithNavController(bottomNavigation, navController)
     }
 
     fun saveDefaultValuesToSharedPreferences() {

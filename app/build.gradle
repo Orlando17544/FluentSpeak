@@ -100,4 +100,10 @@ dependencies {
     implementation "androidx.test:core:$androidXTestCoreVersion"
 
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'
+
+    def nav_version = "2.5.3"
+
+    // Kotlin
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 }
