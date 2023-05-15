@@ -1,0 +1,13 @@
+package com.example.android.fluentspeak.database
+
+import androidx.lifecycle.LiveData
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Transaction
+
+@Dao
+interface RedditDatabaseDao {
+    @Transaction
+    @Query("SELECT * FROM conversation_table WHERE subreddit = :subreddit ORDER BY RANDOM()")
+    fun getConversationsWithUtterances(subreddit: String): LiveData<List<ConversationWithUtterances>>
+}

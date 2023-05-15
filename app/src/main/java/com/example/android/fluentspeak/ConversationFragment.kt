@@ -155,7 +155,7 @@ class ConversationFragment : Fragment() {
                     disableButtons(binding)
 
                     val updateButtons = {
-                        (binding.recordButton as MaterialButton).icon =
+                        (binding.recordButton).icon =
                             resources.getDrawable(R.drawable.baseline_mic_24, null)
                         binding.recordButton.setEnabled(true)
                         binding.stopButton.setEnabled(false)
@@ -292,7 +292,7 @@ class ConversationFragment : Fragment() {
                     when (currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
                             translator?.start()
-                            (binding.translateButton as MaterialButton).icon =
+                            (binding.translateButton).icon =
                                 resources.getDrawable(R.drawable.baseline_stop_24, null)
                             binding.recordButton.setEnabled(false)
                             binding.stopButton.setEnabled(false)
@@ -305,7 +305,7 @@ class ConversationFragment : Fragment() {
                             disableButtons(binding)
 
                             val updateButtons = {
-                                (binding.translateButton as MaterialButton).icon =
+                                (binding.translateButton).icon =
                                     resources.getDrawable(R.drawable.baseline_translate_24, null)
                                 binding.recordButton.setEnabled(true)
                                 binding.stopButton.setEnabled(false)
@@ -347,7 +347,7 @@ class ConversationFragment : Fragment() {
                     when (currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
                             translator?.start()
-                            (binding.translateButton as MaterialButton).icon =
+                            (binding.translateButton).icon =
                                 resources.getDrawable(R.drawable.baseline_stop_24, null)
                             binding.recordButton.setEnabled(false)
                             binding.stopButton.setEnabled(false)
@@ -360,7 +360,7 @@ class ConversationFragment : Fragment() {
                             disableButtons(binding)
 
                             val updateButtons = {
-                                (binding.translateButton as MaterialButton).icon =
+                                (binding.translateButton).icon =
                                     resources.getDrawable(R.drawable.baseline_translate_24, null)
                                 binding.recordButton.setEnabled(true)
                                 binding.stopButton.setEnabled(true)
