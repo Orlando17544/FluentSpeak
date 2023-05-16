@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/conversationFragment"
-        android:enabled="true"
-        android:icon="@drawable/conversation"
-        android:title="@string/first_fragment"/>
-    <item
         android:id="@+id/topicsFragment"
         android:enabled="true"
         android:icon="@drawable/topics"
+        android:title="@string/first_fragment"/>
+    <item
+        android:id="@+id/conversationFragment"
+        android:enabled="true"
+        android:icon="@drawable/conversation"
         android:title="@string/second_fragment"/>
 </menu>
