@@ -50,4 +50,11 @@
 
     <string name="save_preferences_successful_message">The preferences have been saved</string>
     <string name="save_preferences_failed_message">You have left an empty field</string>
+
+    <string-array name="topics">
+        <item>Anime</item>
+        <item>Technology</item>
+        <item>Relationships</item>
+        <item>Games</item>
+    </string-array>
 </resources>

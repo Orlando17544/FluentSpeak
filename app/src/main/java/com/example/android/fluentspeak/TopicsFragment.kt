@@ -1,17 +1,17 @@
 package com.example.android.fluentspeak
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.fluentspeak.database.RedditDatabase
-import com.example.android.fluentspeak.databinding.FragmentConversationBinding
 import com.example.android.fluentspeak.databinding.FragmentTopicsBinding
+
 
 class TopicsFragment : Fragment() {
 
@@ -37,7 +37,7 @@ class TopicsFragment : Fragment() {
                 this, viewModelFactory).get(TopicsViewModel::class.java)
 
         viewModel.data.observe(viewLifecycleOwner, Observer {
-            binding.text.text = it.get(0).conversation.title
+            /*binding.text.text = it.get(0).conversation.title
 
 
             for (utterance in it.get(0).utterances) {
@@ -52,8 +52,17 @@ class TopicsFragment : Fragment() {
                     binding.text.append("\n\n")
                     binding.text.append("Respuesta: " + utterance.text)
                 }
-            }
+            }*/
         })
+
+        val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
+            requireContext(),
+            R.layout.item,
+            resources.getStringArray(R.array.topics)
+        )
+
+        val topicsAutoCompleteTextView = binding.topicsField.editText as AutoCompleteTextView
+        topicsAutoCompleteTextView.setAdapter(adapter)
 
         binding.setLifecycleOwner(this)
 
