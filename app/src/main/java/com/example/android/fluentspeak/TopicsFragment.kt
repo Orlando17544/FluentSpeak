@@ -7,15 +7,21 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.android.fluentspeak.database.RedditDatabase
 import com.example.android.fluentspeak.databinding.FragmentTopicsBinding
+import com.example.android.fluentspeak.network.TranscriptionRequestData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class TopicsFragment : Fragment() {
 
-    //private val sharedViewModel: MainViewModel by activityViewModels()
+    private val sharedViewModel: MainViewModel by activityViewModels()
 
     private lateinit var viewModel: TopicsViewModel
 
@@ -36,25 +42,6 @@ class TopicsFragment : Fragment() {
             ViewModelProvider(
                 this, viewModelFactory).get(TopicsViewModel::class.java)
 
-        viewModel.data.observe(viewLifecycleOwner, Observer {
-            /*binding.text.text = it.get(0).conversation.title
-
-
-            for (utterance in it.get(0).utterances) {
-                if (utterance.replyTo == null) {
-                    binding.text.append("Primero:" + "\n")
-                    binding.text.append(utterance.text)
-                }
-            }
-
-            for (utterance in it.get(0).utterances) {
-                if (utterance.replyTo != null) {
-                    binding.text.append("\n\n")
-                    binding.text.append("Respuesta: " + utterance.text)
-                }
-            }*/
-        })
-
         val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
             requireContext(),
             R.layout.item,
@@ -63,6 +50,16 @@ class TopicsFragment : Fragment() {
 
         val topicsAutoCompleteTextView = binding.topicsField.editText as AutoCompleteTextView
         topicsAutoCompleteTextView.setAdapter(adapter)
+
+        binding.startButton.setOnClickListener {
+            lifecycleScope.launch {
+                val conversationsWithUtterances = withContext(Dispatchers.IO) {
+                    viewModel.getConversationsWithUtterances(topicsAutoCompleteTextView.text.toString())
+                }
+
+                sharedViewModel.conversationsWithUtterances = conversationsWithUtterances
+            }
+        }
 
         binding.setLifecycleOwner(this)
 

@@ -9,5 +9,5 @@ import androidx.room.Transaction
 interface RedditDatabaseDao {
     @Transaction
     @Query("SELECT * FROM conversation_table WHERE subreddit = :subreddit ORDER BY RANDOM()")
-    fun getConversationsWithUtterances(subreddit: String): LiveData<List<ConversationWithUtterances>>
+    suspend fun getConversationsWithUtterances(subreddit: String): List<ConversationWithUtterances>
 }
