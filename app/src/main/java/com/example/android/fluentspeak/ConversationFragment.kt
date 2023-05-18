@@ -84,7 +84,7 @@ class ConversationFragment : Fragment() {
 
         chatLayout = binding.chatLayout
 
-        val message = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a helpful assistant.")
+        val message = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a dialogue creator")
 
         viewModel.addMessageToConversationData(message)
 
