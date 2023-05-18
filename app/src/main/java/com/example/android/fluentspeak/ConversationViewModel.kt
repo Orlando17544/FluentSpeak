@@ -1,9 +1,8 @@
 package com.example.android.fluentspeak
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.*
+import com.example.android.fluentspeak.database.ConversationWithUtterances
 import com.example.android.fluentspeak.network.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -11,13 +10,37 @@ import okhttp3.RequestBody
 class ConversationViewModel(private val apisRepository: ApisRepository) : ViewModel() {
     var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER.toString().lowercase(), "")
 
+    val messages: List<Message>
+        get() = ConversationData.messages
+
+    private val _conversations = MutableLiveData<List<ConversationWithUtterances>>()
+    val conversations: LiveData<List<ConversationWithUtterances>> = _conversations
+
+    private val _currentConversation = MutableLiveData<Int>(0)
+    val currentConversation: LiveData<Int> = _currentConversation
+
+    fun setConversations(conversations: List<ConversationWithUtterances>) {
+        _conversations.value = conversations
+    }
+
+    fun setCurrentConversation(newConversation: Int) {
+        _currentConversation.value = newConversation
+    }
+
     fun addMessageToUnfinishedUserMessage(userMessagePortion: Message) {
         unfinishedUserMessage.content += " " + userMessagePortion.content
         unfinishedUserMessage.content = unfinishedUserMessage.content.trim()
     }
 
     fun addMessageToConversationData(message: Message) {
+        if (message.content == "") {
+            return
+        }
         ConversationData.addMessage(message)
+    }
+
+    fun cleanMessagesConversationData() {
+        ConversationData.cleanMessages()
     }
 
     suspend fun getTranscriptionResponse(transcriptionRequestData: TranscriptionRequestData): TranscriptionResponse {

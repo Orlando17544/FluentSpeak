@@ -77,8 +77,6 @@ class ConversationFragment : Fragment() {
         // Inflate the layout for this fragment
         val binding = FragmentConversationBinding.inflate(inflater)
 
-        var currentConversationsWithUtterances = listOf<ConversationWithUtterances>()
-
         sharedPref = context?.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)!!
 
         chatLayout = binding.chatLayout
@@ -93,11 +91,11 @@ class ConversationFragment : Fragment() {
 
         sharedViewModel.conversations.observe(viewLifecycleOwner, Observer {
 
-            if (sharedViewModel.previousConversations.value != it) {
-                sharedViewModel.setPreviousConversations(it)
+            if (viewModel.conversations.value != it) {
+                viewModel.setConversations(it)
 
-                Toast.makeText(requireContext(), it[0].conversation.title, Toast.LENGTH_SHORT).show()
-                /*
+                val currentConversation = viewModel.currentConversation.value ?: 0
+
                 val conversationTitle = it[currentConversation].conversation.title
 
                 lateinit var starterUtterance: String
@@ -108,8 +106,42 @@ class ConversationFragment : Fragment() {
                     }
                 }
 
-                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString(), starterUtterance))
-                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString(), conversationTitle))*/
+                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitle))
+                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtterance))
+
+                viewModel.cleanMessagesConversationData()
+
+                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitle))
+                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtterance))
+                cleanUnfinishedUserMessage()
+
+                disableButtons(binding)
+
+                val updateButtons = {
+                    binding.recordButton.setEnabled(true)
+                    binding.stopButton.setEnabled(false)
+                    binding.translateButton.setEnabled(true)
+                }
+
+                lifecycleScope.launch {
+                    val textToSpeechResponse = withContext(Dispatchers.IO) {
+                        viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(conversationTitle + starterUtterance), Voice(
+                            sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
+                            sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
+                            sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
+                        )))
+                    }
+
+                    val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                    writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                    configurePlayer()
+
+                    startPlayer()
+                    resetUntilFinishedPlaying(updateButtons)
+                }
+                currentRecordingState = RECORDING_STATE.STOP
             }
         })
 
@@ -210,7 +242,7 @@ class ConversationFragment : Fragment() {
                         viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedUserMessage.content))
                         cleanUnfinishedUserMessage()
 
-                        val messages = ConversationData.messages
+                        val messages = viewModel.messages
 
                         val chatCompletionResponse = withContext(Dispatchers.IO) {
                             viewModel.getChatCompletionResponse(ChatCompletionRequestData(
@@ -259,7 +291,7 @@ class ConversationFragment : Fragment() {
                     viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedUserMessage.content))
                     cleanUnfinishedUserMessage()
 
-                    val messages = ConversationData.messages
+                    val messages = viewModel.messages
 
                     disableButtons(binding)
 
@@ -644,6 +676,10 @@ class ConversationFragment : Fragment() {
     }
 
     internal fun addMessageToView(message: Message): Int {
+        if (message.content == "") {
+            return 0
+        }
+
         val messageView = TextView(context)
 
         messageView.text = message.content
