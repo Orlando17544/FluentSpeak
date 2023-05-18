@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
+import androidx.navigation.ui.setupWithNavController
 import com.example.android.fluentspeak.database.RedditDatabase
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
@@ -16,22 +17,9 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var sharedPref: SharedPreferences
 
-    lateinit var navController: NavController
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        /*val dataSource = RedditDatabase.getInstance(application).redditDatabaseDao
-
-        val viewModelFactory = MainViewModelFactory(dataSource)
-
-        val mainViewModel =
-            ViewModelProvider(
-                this, viewModelFactory).get(MainViewModel::class.java)
-
-*/
-
 
         sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 
@@ -41,12 +29,13 @@ class MainActivity : AppCompatActivity() {
             saveDefaultValuesToSharedPreferences()
         }
 
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_container) as NavHostFragment
-        navController = navHostFragment.navController
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
 
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        val navController = navHostFragment.navController
 
-        NavigationUI.setupWithNavController(bottomNavigation, navController)
+        findViewById<BottomNavigationView>(R.id.bottom_navigation)
+            .setupWithNavController(navController)
     }
 
     fun saveDefaultValuesToSharedPreferences() {

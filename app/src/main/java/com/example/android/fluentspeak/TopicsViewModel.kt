@@ -14,8 +14,6 @@ import com.example.android.fluentspeak.network.Usage
 import kotlinx.coroutines.launch
 
 class TopicsViewModel(val database: RedditDatabaseDao): ViewModel() {
-    //val data = database.getConversationsWithUtterances("anime")
-
     suspend fun getConversationsWithUtterances(subreddit: String): List<ConversationWithUtterances> {
         return database.getConversationsWithUtterances(subreddit)
     }

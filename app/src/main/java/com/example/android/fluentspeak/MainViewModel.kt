@@ -1,21 +1,23 @@
 package com.example.android.fluentspeak
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.example.android.fluentspeak.database.ConversationWithUtterances
-import com.example.android.fluentspeak.database.RedditDatabaseDao
 
 class MainViewModel : ViewModel() {
-    lateinit var conversationsWithUtterances: List<ConversationWithUtterances>
 
+    private val _conversations = MutableLiveData<List<ConversationWithUtterances>>()
+    val conversations: LiveData<List<ConversationWithUtterances>> = _conversations
 
+    private val _previousConversations = MutableLiveData<List<ConversationWithUtterances>>()
+    val previousConversations: LiveData<List<ConversationWithUtterances>> = _previousConversations
+
+    fun setConversations(conversations: List<ConversationWithUtterances>) {
+        _conversations.value = conversations
+    }
+
+    fun setPreviousConversations(conversations: List<ConversationWithUtterances>) {
+        _previousConversations.value = conversations
+    }
 }
-
-/*
-@Suppress("UNCHECKED_CAST")
-class MainViewModelFactory (
-    private val dataSource: RedditDatabaseDao
-) : ViewModelProvider.NewInstanceFactory() {
-    override fun <T : ViewModel> create(modelClass: Class<T>) =
-        (MainViewModel(dataSource) as T)
-}*/

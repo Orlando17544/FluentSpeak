@@ -1,19 +1,23 @@
 package com.example.android.fluentspeak
 
 import android.os.Bundle
+import android.text.Editable
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
+import androidx.navigation.ui.NavigationUI
 import com.example.android.fluentspeak.database.RedditDatabase
 import com.example.android.fluentspeak.databinding.FragmentTopicsBinding
-import com.example.android.fluentspeak.network.TranscriptionRequestData
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -22,6 +26,7 @@ import kotlinx.coroutines.withContext
 class TopicsFragment : Fragment() {
 
     private val sharedViewModel: MainViewModel by activityViewModels()
+    private var topicsAutoCompleteTextView: AutoCompleteTextView? = null
 
     private lateinit var viewModel: TopicsViewModel
 
@@ -40,7 +45,8 @@ class TopicsFragment : Fragment() {
 
         viewModel =
             ViewModelProvider(
-                this, viewModelFactory).get(TopicsViewModel::class.java)
+                this, viewModelFactory
+            ).get(TopicsViewModel::class.java)
 
         val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
             requireContext(),
@@ -48,23 +54,41 @@ class TopicsFragment : Fragment() {
             resources.getStringArray(R.array.topics)
         )
 
-        val topicsAutoCompleteTextView = binding.topicsField.editText as AutoCompleteTextView
-        topicsAutoCompleteTextView.setAdapter(adapter)
+        topicsAutoCompleteTextView = binding.topicsField.editText as AutoCompleteTextView
+        topicsAutoCompleteTextView?.setAdapter(adapter)
 
         binding.startButton.setOnClickListener {
             lifecycleScope.launch {
-                val conversationsWithUtterances = withContext(Dispatchers.IO) {
-                    viewModel.getConversationsWithUtterances(topicsAutoCompleteTextView.text.toString())
+                val conversations = withContext(Dispatchers.IO) {
+                    viewModel.getConversationsWithUtterances(topicsAutoCompleteTextView?.text.toString())
                 }
 
-                sharedViewModel.conversationsWithUtterances = conversationsWithUtterances
+                sharedViewModel.setConversations(conversations)
+
+                val controller = activity?.findNavController(R.id.nav_host_fragment)
+                val menu: Menu? =
+                    activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)?.menu
+
+                val item = menu?.findItem(R.id.conversationFragment)
+
+                NavigationUI.onNavDestinationSelected(item!!, controller!!)
             }
         }
 
         binding.setLifecycleOwner(this)
 
-        binding.viewModel = viewModel
-
         return binding.root
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        topicsAutoCompleteTextView?.setText("")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        topicsAutoCompleteTextView = null
     }
 }

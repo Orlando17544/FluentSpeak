@@ -1,7 +1,5 @@
 package com.example.android.fluentspeak
 
-import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -15,11 +13,15 @@ import android.os.Bundle
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import com.example.android.fluentspeak.database.ConversationWithUtterances
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
 import com.example.android.fluentspeak.network.*
 import com.google.android.material.button.MaterialButton
@@ -62,6 +64,8 @@ class ConversationFragment : Fragment() {
 
     lateinit var sharedPref: SharedPreferences
 
+    private val sharedViewModel: MainViewModel by activityViewModels()
+
     private val viewModel: ConversationViewModel by viewModels<ConversationViewModel> {
         ConversationViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
     }
@@ -72,6 +76,8 @@ class ConversationFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val binding = FragmentConversationBinding.inflate(inflater)
+
+        var currentConversationsWithUtterances = listOf<ConversationWithUtterances>()
 
         sharedPref = context?.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)!!
 
@@ -84,6 +90,28 @@ class ConversationFragment : Fragment() {
         addMessageToView(message)
 
         setupListeners(binding)
+
+        sharedViewModel.conversations.observe(viewLifecycleOwner, Observer {
+
+            if (sharedViewModel.previousConversations.value != it) {
+                sharedViewModel.setPreviousConversations(it)
+
+                Toast.makeText(requireContext(), it[0].conversation.title, Toast.LENGTH_SHORT).show()
+                /*
+                val conversationTitle = it[currentConversation].conversation.title
+
+                lateinit var starterUtterance: String
+                for (utterance in it[currentConversation].utterances) {
+                    if (utterance.replyTo == null) {
+                        starterUtterance = utterance.text
+                        break
+                    }
+                }
+
+                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString(), starterUtterance))
+                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString(), conversationTitle))*/
+            }
+        })
 
         return binding.root
     }
