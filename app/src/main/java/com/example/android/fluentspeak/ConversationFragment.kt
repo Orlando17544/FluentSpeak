@@ -22,6 +22,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.example.android.fluentspeak.database.ConversationWithUtterances
+import com.example.android.fluentspeak.database.Utterance
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
 import com.example.android.fluentspeak.network.*
 import com.google.android.material.button.MaterialButton
@@ -45,6 +46,8 @@ enum class TRANSLATING_STATE {
 enum class MESSAGE_ROLE {
     SYSTEM, ASSISTANT, USER
 }
+
+val UTTERANCES_CONVERSATION = 4
 
 class ConversationFragment : Fragment() {
 
@@ -96,23 +99,48 @@ class ConversationFragment : Fragment() {
 
                 val currentConversation = viewModel.currentConversation.value ?: 0
 
-                val conversationTitle = it[currentConversation].conversation.title
+                // Add title and starter utterance
 
-                lateinit var starterUtterance: String
+                val conversation = it[currentConversation].conversation
+
+                lateinit var starterUtterance: Utterance
                 for (utterance in it[currentConversation].utterances) {
                     if (utterance.replyTo == null) {
-                        starterUtterance = utterance.text
+                        starterUtterance = utterance
                         break
                     }
                 }
 
-                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitle))
-                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtterance))
+                val conversationTitleFormatted = starterUtterance.speaker + " said: " + conversation.title
+                val starterUtteranceFormatted = starterUtterance.speaker + " said: " + starterUtterance.text
+
+                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitleFormatted))
+                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtterance.text))
 
                 viewModel.cleanMessagesConversationData()
 
-                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitle))
-                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtterance))
+                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitleFormatted))
+                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtteranceFormatted))
+
+                // Add utterances
+
+                var utterances = mutableListOf<Utterance>()
+                for (utterance in it[currentConversation].utterances) {
+                    if (utterance.replyTo != null) {
+                        utterances.add(utterance)
+                    }
+                }
+
+                utterances = utterances.asSequence().shuffled().take(UTTERANCES_CONVERSATION).toMutableList()
+
+                for (utterance in utterances) {
+                    val utteranceFormatted = utterance.speaker + " said: " + utterance.text
+
+                    addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), utteranceFormatted))
+
+                    viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), utteranceFormatted))
+                }
+
                 cleanUnfinishedUserMessage()
 
                 disableButtons(binding)
@@ -125,7 +153,7 @@ class ConversationFragment : Fragment() {
 
                 lifecycleScope.launch {
                     val textToSpeechResponse = withContext(Dispatchers.IO) {
-                        viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(conversationTitle + starterUtterance), Voice(
+                        viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(conversationTitleFormatted + starterUtterance.text), Voice(
                             sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
                             sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
                             sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
