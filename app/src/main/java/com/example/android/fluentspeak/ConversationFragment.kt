@@ -271,7 +271,9 @@ class ConversationFragment : Fragment() {
 
                         addMessageToView(userMessagePortion)
 
-                        viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedMessage.content))
+                        val userMessageFormatted = "Orlando" + " said: " + viewModel.unfinishedMessage.content
+
+                        viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), userMessageFormatted))
                         viewModel.cleanUnfinishedMessage()
 
                         val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
@@ -321,7 +323,9 @@ class ConversationFragment : Fragment() {
 
                     configureRecorder()
 
-                    viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedMessage.content))
+                    val userMessageFormatted = "Orlando" + " said: " + viewModel.unfinishedMessage.content
+
+                    viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), userMessageFormatted))
                     viewModel.cleanUnfinishedMessage()
 
                     val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
