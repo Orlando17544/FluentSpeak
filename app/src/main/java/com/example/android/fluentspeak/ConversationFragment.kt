@@ -86,7 +86,7 @@ class ConversationFragment : Fragment() {
 
         val message = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a dialogue creator")
 
-        viewModel.addMessageToConversationData(message)
+        viewModel.addMessage(message)
 
         addMessageToView(message)
 
@@ -117,10 +117,10 @@ class ConversationFragment : Fragment() {
                 addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitleFormatted))
                 addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtterance.text))
 
-                viewModel.cleanMessagesConversationData()
+                viewModel.cleanMessages()
 
-                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitleFormatted))
-                viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtteranceFormatted))
+                viewModel.addMessage(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitleFormatted))
+                viewModel.addMessage(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtteranceFormatted))
 
                 // Add utterances
 
@@ -138,10 +138,10 @@ class ConversationFragment : Fragment() {
 
                     addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), utteranceFormatted))
 
-                    viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), utteranceFormatted))
+                    viewModel.addMessage(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), utteranceFormatted))
                 }
 
-                cleanUnfinishedUserMessage()
+                viewModel.cleanUnfinishedMessage()
 
                 disableButtons(binding)
 
@@ -197,7 +197,7 @@ class ConversationFragment : Fragment() {
                         val transcriptionResponse = withContext(Dispatchers.IO) {
                             viewModel.getTranscriptionResponse(TranscriptionRequestData(
                                 file = recordingCacheFile,
-                                prompt = viewModel.unfinishedUserMessage.content,
+                                prompt = viewModel.unfinishedMessage.content,
                                 temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
                             ))
                         }
@@ -206,7 +206,7 @@ class ConversationFragment : Fragment() {
 
                         val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), transcriptionResponse.text.trim())
 
-                        viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
+                        viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
 
@@ -254,7 +254,7 @@ class ConversationFragment : Fragment() {
                         val transcriptionResponse = withContext(Dispatchers.IO) {
                             viewModel.getTranscriptionResponse(TranscriptionRequestData(
                                 file = recordingCacheFile,
-                                prompt = viewModel.unfinishedUserMessage.content,
+                                prompt = viewModel.unfinishedMessage.content,
                                 temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
                             ))
                         }
@@ -263,12 +263,12 @@ class ConversationFragment : Fragment() {
 
                         val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), transcriptionResponse.text.trim())
 
-                        viewModel.addMessageToUnfinishedUserMessage(userMessagePortion)
+                        viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
 
-                        viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedUserMessage.content))
-                        cleanUnfinishedUserMessage()
+                        viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedMessage.content))
+                        viewModel.cleanUnfinishedMessage()
 
                         val messages = viewModel.messages
 
@@ -287,7 +287,7 @@ class ConversationFragment : Fragment() {
                             chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessageToConversationData(chatCompletionMessage)
+                        viewModel.addMessage(chatCompletionMessage)
 
                         addMessageToView(chatCompletionMessage)
 
@@ -316,8 +316,8 @@ class ConversationFragment : Fragment() {
 
                     configureRecorder()
 
-                    viewModel.addMessageToConversationData(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedUserMessage.content))
-                    cleanUnfinishedUserMessage()
+                    viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedMessage.content))
+                    viewModel.cleanUnfinishedMessage()
 
                     val messages = viewModel.messages
 
@@ -345,7 +345,7 @@ class ConversationFragment : Fragment() {
                             chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessageToConversationData(chatCompletionMessage)
+                        viewModel.addMessage(chatCompletionMessage)
 
                         addMessageToView(chatCompletionMessage)
 
@@ -685,10 +685,6 @@ class ConversationFragment : Fragment() {
             mediaPlayer?.reset()
             updateButtons()
         }
-    }
-
-    private fun cleanUnfinishedUserMessage() {
-        viewModel.unfinishedUserMessage.content = ""
     }
 
     private fun writeDataToFile(data: ByteArray, file: File) {

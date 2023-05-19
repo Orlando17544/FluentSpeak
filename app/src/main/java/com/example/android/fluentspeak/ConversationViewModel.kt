@@ -8,10 +8,13 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 class ConversationViewModel(private val apisRepository: ApisRepository) : ViewModel() {
-    var unfinishedUserMessage: Message = Message(MESSAGE_ROLE.USER.toString().lowercase(), "")
+    private val _unfinishedMessage = Message(MESSAGE_ROLE.USER.toString().lowercase(), "")
+    val unfinishedMessage: Message
+        get() = _unfinishedMessage
 
+    private val _messages: MutableList<Message> = mutableListOf()
     val messages: List<Message>
-        get() = ConversationData.messages
+        get() = _messages
 
     private val _conversations = MutableLiveData<List<ConversationWithUtterances>>()
     val conversations: LiveData<List<ConversationWithUtterances>> = _conversations
@@ -27,20 +30,24 @@ class ConversationViewModel(private val apisRepository: ApisRepository) : ViewMo
         _currentConversation.value = newConversation
     }
 
-    fun addMessageToUnfinishedUserMessage(userMessagePortion: Message) {
-        unfinishedUserMessage.content += " " + userMessagePortion.content
-        unfinishedUserMessage.content = unfinishedUserMessage.content.trim()
+    fun addMessageToUnfinishedMessage(messagePortion: Message) {
+        _unfinishedMessage.content += " " + messagePortion.content
+        _unfinishedMessage.content = _unfinishedMessage.content.trim()
     }
 
-    fun addMessageToConversationData(message: Message) {
+    fun cleanUnfinishedMessage() {
+        _unfinishedMessage.content = ""
+    }
+
+    fun addMessage(message: Message) {
         if (message.content == "") {
             return
         }
-        ConversationData.addMessage(message)
+        _messages.add(message)
     }
 
-    fun cleanMessagesConversationData() {
-        ConversationData.cleanMessages()
+    fun cleanMessages() {
+        _messages.clear()
     }
 
     suspend fun getTranscriptionResponse(transcriptionRequestData: TranscriptionRequestData): TranscriptionResponse {
