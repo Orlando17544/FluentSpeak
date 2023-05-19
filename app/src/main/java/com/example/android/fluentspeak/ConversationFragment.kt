@@ -170,6 +170,10 @@ class ConversationFragment : Fragment() {
                     resetUntilFinishedPlaying(updateButtons)
                 }
                 currentRecordingState = RECORDING_STATE.STOP
+            } else {
+                for (message in viewModel.messages) {
+                    addMessageToView(message)
+                }
             }
         })
 
