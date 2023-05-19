@@ -8,6 +8,10 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 class ConversationViewModel(private val apisRepository: ApisRepository) : ViewModel() {
+    private val _systemMessage = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a dialogue creator")
+    val systemMessage: Message
+        get() = _systemMessage
+
     private val _unfinishedMessage = Message(MESSAGE_ROLE.USER.toString().lowercase(), "")
     val unfinishedMessage: Message
         get() = _unfinishedMessage

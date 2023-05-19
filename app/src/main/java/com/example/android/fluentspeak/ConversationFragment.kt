@@ -47,7 +47,11 @@ enum class MESSAGE_ROLE {
     SYSTEM, ASSISTANT, USER
 }
 
-val UTTERANCES_CONVERSATION = 4
+val UTTERANCES_PER_CONVERSATION = 4
+val CONVERSATION_TITLE = 1
+val STARTER_UTTERANCE = 1
+val USER_RESPONSE = 1
+val MESSAGES_TO_CHATGPT = UTTERANCES_PER_CONVERSATION + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
 
 class ConversationFragment : Fragment() {
 
@@ -84,11 +88,7 @@ class ConversationFragment : Fragment() {
 
         chatLayout = binding.chatLayout
 
-        val message = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a dialogue creator")
-
-        viewModel.addMessage(message)
-
-        addMessageToView(message)
+        addMessageToView(viewModel.systemMessage)
 
         setupListeners(binding)
 
@@ -131,7 +131,7 @@ class ConversationFragment : Fragment() {
                     }
                 }
 
-                utterances = utterances.asSequence().shuffled().take(UTTERANCES_CONVERSATION).toMutableList()
+                utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION).toMutableList()
 
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
@@ -270,7 +270,8 @@ class ConversationFragment : Fragment() {
                         viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedMessage.content))
                         viewModel.cleanUnfinishedMessage()
 
-                        val messages = viewModel.messages
+                        val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
+                        val messages = listOf(viewModel.systemMessage) + lastMessages
 
                         val chatCompletionResponse = withContext(Dispatchers.IO) {
                             viewModel.getChatCompletionResponse(ChatCompletionRequestData(
@@ -319,7 +320,8 @@ class ConversationFragment : Fragment() {
                     viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), viewModel.unfinishedMessage.content))
                     viewModel.cleanUnfinishedMessage()
 
-                    val messages = viewModel.messages
+                    val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
+                    val messages = listOf(viewModel.systemMessage) + lastMessages
 
                     disableButtons(binding)
 
