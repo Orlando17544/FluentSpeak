@@ -5,8 +5,4 @@
         android:icon="@drawable/baseline_settings_24"
         android:title="@string/item_settings"
         app:showAsAction="never"/>
-    <item android:id="@+id/item_change_conversation"
-        android:icon="@drawable/baseline_change_circle_24"
-        android:title="@string/item_change_conversation"
-        app:showAsAction="ifRoom"/>
 </menu>
