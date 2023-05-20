@@ -107,8 +107,8 @@ class TopicsFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.item_settings -> {
-                val intent = Intent(activity, SettingsActivity::class.java)
-                startActivity(intent)
+                val controller = activity?.findNavController(R.id.nav_host_fragment)
+                controller?.navigate(R.id.settingsFragment)
                 true
             }
             else -> super.onOptionsItemSelected(item)

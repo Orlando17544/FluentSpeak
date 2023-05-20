@@ -1,27 +1,27 @@
 package com.example.android.fluentspeak
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.example.android.fluentspeak.databinding.ActivitySettingsBinding
+import com.example.android.fluentspeak.databinding.FragmentSettingsBinding
+import com.example.android.fluentspeak.databinding.FragmentTopicsBinding
 import com.example.android.fluentspeak.network.Voice
-import com.google.android.material.slider.Slider
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsFragment : Fragment() {
 
-    lateinit var binding: ActivitySettingsBinding
+    lateinit var binding: FragmentSettingsBinding
 
     lateinit var accentField: TextInputLayout
     lateinit var genderField: TextInputLayout
@@ -32,16 +32,24 @@ class SettingsActivity : AppCompatActivity() {
 
     lateinit var sharedPref: SharedPreferences
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_settings)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        binding = DataBindingUtil.inflate(
+            inflater,
+            R.layout.fragment_settings,
+            container,
+            false
+        )
 
         voiceNameField = binding.textToSpeechVoiceNameField
         accentField = binding.textToSpeechAccentField
         genderField = binding.textToSpeechGenderField
 
         sharedPref =
-            getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+            requireContext().getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
 
         getValuesFromSharedPreferences()
 
@@ -79,42 +87,44 @@ class SettingsActivity : AppCompatActivity() {
                 Snackbar.make(it, R.string.save_preferences_successful_message, Snackbar.LENGTH_SHORT).show()
             }
         }
+
+        return binding.root
     }
 
     fun saveValuesToSharedPreferences() {
         with(sharedPref.edit()) {
             putFloat(
-                getString(R.string.whisper_temperature_key),
+                getString(com.example.android.fluentspeak.R.string.whisper_temperature_key),
                 binding.whisperTemperatureSlider.value
             )
 
             putFloat(
-                getString(R.string.chat_gpt_temperature_key),
+                getString(com.example.android.fluentspeak.R.string.chat_gpt_temperature_key),
                 binding.chatGptTemperatureSlider.value
             )
             putInt(
-                getString(R.string.chat_gpt_max_tokens_key),
+                getString(com.example.android.fluentspeak.R.string.chat_gpt_max_tokens_key),
                 binding.chatGptMaxTokensField.editText?.text.toString().toInt()
             )
             putFloat(
-                getString(R.string.chat_gpt_presence_penalty_key),
+                getString(com.example.android.fluentspeak.R.string.chat_gpt_presence_penalty_key),
                 binding.chatGptPresencePenaltySlider.value
             )
             putFloat(
-                getString(R.string.chat_gpt_frecuency_penalty_key),
+                getString(com.example.android.fluentspeak.R.string.chat_gpt_frecuency_penalty_key),
                 binding.chatGptFrecuencyPenaltySlider.value
             )
 
             putString(
-                getString(R.string.text_to_speech_accent_key),
+                getString(com.example.android.fluentspeak.R.string.text_to_speech_accent_key),
                 binding.textToSpeechAccentField.editText?.text.toString()
             )
             putString(
-                getString(R.string.text_to_speech_gender_key),
+                getString(com.example.android.fluentspeak.R.string.text_to_speech_gender_key),
                 binding.textToSpeechGenderField.editText?.text.toString()
             )
             putString(
-                getString(R.string.text_to_speech_voice_name_key),
+                getString(com.example.android.fluentspeak.R.string.text_to_speech_voice_name_key),
                 binding.textToSpeechVoiceNameField.editText?.text.toString()
             )
             apply()
@@ -122,7 +132,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     fun updateVoiceNameField(voiceNameItems: List<String>) {
-        val voiceNameAdapter = ArrayAdapter(this, R.layout.item, voiceNameItems)
+        val voiceNameAdapter = ArrayAdapter(requireContext(), R.layout.item, voiceNameItems)
         (voiceNameField.editText as? AutoCompleteTextView)?.setAdapter(voiceNameAdapter)
     }
 
@@ -179,23 +189,23 @@ class SettingsActivity : AppCompatActivity() {
 
     fun setupHintListeners() {
         binding.whisperTemperatureImage.setOnClickListener {
-            Toast.makeText(this, getString(R.string.whisper_temperature_hint), Toast.LENGTH_LONG)
+            Toast.makeText(requireContext(), getString(R.string.whisper_temperature_hint), Toast.LENGTH_LONG)
                 .show()
         }
 
         binding.chatGptTemperatureImage.setOnClickListener {
-            Toast.makeText(this, getString(R.string.chat_gpt_temperature_hint), Toast.LENGTH_LONG)
+            Toast.makeText(requireContext(), getString(R.string.chat_gpt_temperature_hint), Toast.LENGTH_LONG)
                 .show()
         }
 
         binding.chatGptMaxTokensImage.setOnClickListener {
-            Toast.makeText(this, getString(R.string.chat_gpt_max_tokens_hint), Toast.LENGTH_LONG)
+            Toast.makeText(requireContext(), getString(R.string.chat_gpt_max_tokens_hint), Toast.LENGTH_LONG)
                 .show()
         }
 
         binding.chatGptPresencePenaltyImage.setOnClickListener {
             Toast.makeText(
-                this,
+                requireContext(),
                 getString(R.string.chat_gpt_presence_penalty_hint),
                 Toast.LENGTH_LONG
             ).show()
@@ -203,25 +213,25 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.chatGptFrecuencyPenaltyImage.setOnClickListener {
             Toast.makeText(
-                this,
+                requireContext(),
                 getString(R.string.chat_gpt_frecuency_penalty_hint),
                 Toast.LENGTH_LONG
             ).show()
         }
 
         binding.textToSpeechAccentImage.setOnClickListener {
-            Toast.makeText(this, getString(R.string.text_to_speech_accent_hint), Toast.LENGTH_LONG)
+            Toast.makeText(requireContext(), getString(R.string.text_to_speech_accent_hint), Toast.LENGTH_LONG)
                 .show()
         }
 
         binding.textToSpeechGenderImage.setOnClickListener {
-            Toast.makeText(this, getString(R.string.text_to_speech_gender_hint), Toast.LENGTH_LONG)
+            Toast.makeText(requireContext(), getString(R.string.text_to_speech_gender_hint), Toast.LENGTH_LONG)
                 .show()
         }
 
         binding.textToSpeechVoiceNameImage.setOnClickListener {
             Toast.makeText(
-                this,
+                requireContext(),
                 getString(R.string.text_to_speech_voice_name_hint),
                 Toast.LENGTH_LONG
             ).show()
@@ -230,11 +240,11 @@ class SettingsActivity : AppCompatActivity() {
 
     fun setupAdapters() {
         val accentItems = TextToSpeechSettingsData.VOICES.map { it.languageCode }.distinct()
-        val accentAdapter = ArrayAdapter(this, R.layout.item, accentItems)
+        val accentAdapter = ArrayAdapter(requireContext(), R.layout.item, accentItems)
         (accentField.editText as? AutoCompleteTextView)?.setAdapter(accentAdapter)
 
         val genderItems = TextToSpeechSettingsData.VOICES.map { it.ssmlGender }.distinct()
-        val genderAdapter = ArrayAdapter(this, R.layout.item, genderItems)
+        val genderAdapter = ArrayAdapter(requireContext(), R.layout.item, genderItems)
         (genderField.editText as? AutoCompleteTextView)?.setAdapter(genderAdapter)
     }
 

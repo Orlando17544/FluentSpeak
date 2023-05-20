@@ -23,9 +23,11 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
 import com.example.android.fluentspeak.database.ConversationWithUtterances
 import com.example.android.fluentspeak.database.Utterance
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
+import com.example.android.fluentspeak.databinding.FragmentSettingsBinding
 import com.example.android.fluentspeak.network.*
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
@@ -80,19 +82,12 @@ class ConversationFragment : Fragment() {
         ConversationViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
     }
 
-    private lateinit var binding: FragmentConversationBinding
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = DataBindingUtil.inflate(
-            inflater,
-            R.layout.fragment_conversation,
-            container,
-            false
-        )
+        val binding = FragmentConversationBinding.inflate(inflater)
 
         sharedPref = context?.getSharedPreferences(
             getString(R.string.preference_file_key),
@@ -1105,8 +1100,8 @@ class ConversationFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.item_settings -> {
-                val intent = Intent(activity, SettingsActivity::class.java)
-                startActivity(intent)
+                val controller = activity?.findNavController(R.id.nav_host_fragment)
+                controller?.navigate(R.id.settingsFragment)
                 true
             }
 
