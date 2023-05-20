@@ -12,7 +12,6 @@ import android.widget.AutoCompleteTextView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
-import com.example.android.fluentspeak.databinding.ActivitySettingsBinding
 import com.example.android.fluentspeak.databinding.FragmentSettingsBinding
 import com.example.android.fluentspeak.databinding.FragmentTopicsBinding
 import com.example.android.fluentspeak.network.Voice

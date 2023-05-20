@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
+import androidx.navigation.ui.onNavDestinationSelected
 import com.example.android.fluentspeak.database.RedditDatabase
 import com.example.android.fluentspeak.databinding.FragmentTopicsBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -106,10 +107,10 @@ class TopicsFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.item_settings -> {
-                val controller = activity?.findNavController(R.id.nav_host_fragment)
-                controller?.navigate(R.id.settingsFragment)
-                true
+            R.id.settingsFragment -> {
+                val navController = requireActivity().findNavController(R.id.nav_host_fragment)
+
+                return item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
             }
             else -> super.onOptionsItemSelected(item)
         }

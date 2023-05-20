@@ -24,6 +24,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import com.example.android.fluentspeak.database.ConversationWithUtterances
 import com.example.android.fluentspeak.database.Utterance
 import com.example.android.fluentspeak.databinding.FragmentConversationBinding
@@ -1099,10 +1100,10 @@ class ConversationFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.item_settings -> {
-                val controller = activity?.findNavController(R.id.nav_host_fragment)
-                controller?.navigate(R.id.settingsFragment)
-                true
+            R.id.settingsFragment -> {
+                val navController = requireActivity().findNavController(R.id.nav_host_fragment)
+
+                return item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
             }
 
             R.id.item_change_conversation -> {
