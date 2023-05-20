@@ -16,9 +16,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.example.android.fluentspeak.database.ConversationWithUtterances
@@ -51,7 +53,8 @@ val UTTERANCES_PER_CONVERSATION = 4
 val CONVERSATION_TITLE = 1
 val STARTER_UTTERANCE = 1
 val USER_RESPONSE = 1
-val MESSAGES_TO_CHATGPT = UTTERANCES_PER_CONVERSATION + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
+val MESSAGES_TO_CHATGPT =
+    UTTERANCES_PER_CONVERSATION + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
 
 class ConversationFragment : Fragment() {
 
@@ -77,25 +80,171 @@ class ConversationFragment : Fragment() {
         ConversationViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
     }
 
+    private lateinit var binding: FragmentConversationBinding
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val binding = FragmentConversationBinding.inflate(inflater)
+        binding = DataBindingUtil.inflate(
+            inflater,
+            R.layout.fragment_conversation,
+            container,
+            false
+        )
 
-        sharedPref = context?.getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)!!
+        sharedPref = context?.getSharedPreferences(
+            getString(R.string.preference_file_key),
+            Context.MODE_PRIVATE
+        )!!
 
         chatLayout = binding.chatLayout
 
-        addMessageToView(viewModel.systemMessage)
-
         setupListeners(binding)
+
+        viewModel.currentConversation.observe(viewLifecycleOwner, Observer {
+            if (viewModel.previousConversation.value != it) {
+
+                viewModel.updatePreviousConversation()
+
+                chatLayout?.removeAllViews()
+
+                addMessageToView(viewModel.systemMessage)
+
+                val currentConversation = it
+
+                val conversations =
+                    viewModel.conversations.value ?: listOf<ConversationWithUtterances>()
+
+                // Add title and starter utterance
+
+                val conversation = conversations[currentConversation].conversation
+
+                lateinit var starterUtterance: Utterance
+                for (utterance in conversations[currentConversation].utterances) {
+                    if (utterance.replyTo == null) {
+                        starterUtterance = utterance
+                        break
+                    }
+                }
+
+                val conversationTitleFormatted =
+                    starterUtterance.speaker + " said: " + conversation.title
+                val starterUtteranceFormatted =
+                    starterUtterance.speaker + " said: " + starterUtterance.text
+
+                addMessageToView(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        conversationTitleFormatted
+                    )
+                )
+                addMessageToView(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        starterUtterance.text
+                    )
+                )
+
+                viewModel.cleanMessages()
+
+                viewModel.addMessage(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        conversationTitleFormatted
+                    )
+                )
+                viewModel.addMessage(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        starterUtteranceFormatted
+                    )
+                )
+
+                // Add utterances
+
+
+                var utterances = mutableListOf<Utterance>()
+                for (utterance in conversations[currentConversation].utterances) {
+                    if (utterance.replyTo != null) {
+                        utterances.add(utterance)
+                    }
+                }
+
+                utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
+                    .toMutableList()
+
+                for (utterance in utterances) {
+                    val utteranceFormatted = utterance.speaker + " said: " + utterance.text
+
+                    addMessageToView(
+                        Message(
+                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                            utteranceFormatted
+                        )
+                    )
+
+                    viewModel.addMessage(
+                        Message(
+                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                            utteranceFormatted
+                        )
+                    )
+                }
+
+                viewModel.cleanUnfinishedMessage()
+
+                disableButtons(binding)
+
+                val updateButtons = {
+                    binding.recordButton.setEnabled(true)
+                    binding.stopButton.setEnabled(false)
+                    binding.translateButton.setEnabled(true)
+                }
+
+                lifecycleScope.launch {
+                    val textToSpeechResponse = withContext(Dispatchers.IO) {
+                        viewModel.getTextToSpeechResponse(
+                            TextToSpeechRequestData(
+                                Input(conversationTitleFormatted + starterUtterance.text), Voice(
+                                    sharedPref.getString(
+                                        context?.getString(R.string.text_to_speech_accent_key),
+                                        ""
+                                    ).toString(),
+                                    sharedPref.getString(
+                                        context?.getString(R.string.text_to_speech_voice_name_key),
+                                        ""
+                                    ).toString(),
+                                    sharedPref.getString(
+                                        context?.getString(R.string.text_to_speech_gender_key),
+                                        ""
+                                    ).toString()
+                                )
+                            )
+                        )
+                    }
+
+                    val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                    writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                    configurePlayer()
+
+                    startPlayer()
+                    resetUntilFinishedPlaying(updateButtons)
+                }
+                currentRecordingState = RECORDING_STATE.STOP
+            }
+        })
 
         sharedViewModel.conversations.observe(viewLifecycleOwner, Observer {
 
+            // If user selected another subreddit
             if (viewModel.conversations.value != it) {
                 viewModel.setConversations(it)
+
+                addMessageToView(viewModel.systemMessage)
 
                 val currentConversation = viewModel.currentConversation.value ?: 0
 
@@ -111,16 +260,38 @@ class ConversationFragment : Fragment() {
                     }
                 }
 
-                val conversationTitleFormatted = starterUtterance.speaker + " said: " + conversation.title
-                val starterUtteranceFormatted = starterUtterance.speaker + " said: " + starterUtterance.text
+                val conversationTitleFormatted =
+                    starterUtterance.speaker + " said: " + conversation.title
+                val starterUtteranceFormatted =
+                    starterUtterance.speaker + " said: " + starterUtterance.text
 
-                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitleFormatted))
-                addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtterance.text))
+                addMessageToView(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        conversationTitleFormatted
+                    )
+                )
+                addMessageToView(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        starterUtterance.text
+                    )
+                )
 
                 viewModel.cleanMessages()
 
-                viewModel.addMessage(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), conversationTitleFormatted))
-                viewModel.addMessage(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), starterUtteranceFormatted))
+                viewModel.addMessage(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        conversationTitleFormatted
+                    )
+                )
+                viewModel.addMessage(
+                    Message(
+                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                        starterUtteranceFormatted
+                    )
+                )
 
                 // Add utterances
 
@@ -131,14 +302,25 @@ class ConversationFragment : Fragment() {
                     }
                 }
 
-                utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION).toMutableList()
+                utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
+                    .toMutableList()
 
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
-                    addMessageToView(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), utteranceFormatted))
+                    addMessageToView(
+                        Message(
+                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                            utteranceFormatted
+                        )
+                    )
 
-                    viewModel.addMessage(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), utteranceFormatted))
+                    viewModel.addMessage(
+                        Message(
+                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                            utteranceFormatted
+                        )
+                    )
                 }
 
                 viewModel.cleanUnfinishedMessage()
@@ -153,11 +335,24 @@ class ConversationFragment : Fragment() {
 
                 lifecycleScope.launch {
                     val textToSpeechResponse = withContext(Dispatchers.IO) {
-                        viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(conversationTitleFormatted + starterUtterance.text), Voice(
-                            sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
-                            sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
-                            sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
-                        )))
+                        viewModel.getTextToSpeechResponse(
+                            TextToSpeechRequestData(
+                                Input(conversationTitleFormatted + starterUtterance.text), Voice(
+                                    sharedPref.getString(
+                                        context?.getString(R.string.text_to_speech_accent_key),
+                                        ""
+                                    ).toString(),
+                                    sharedPref.getString(
+                                        context?.getString(R.string.text_to_speech_voice_name_key),
+                                        ""
+                                    ).toString(),
+                                    sharedPref.getString(
+                                        context?.getString(R.string.text_to_speech_gender_key),
+                                        ""
+                                    ).toString()
+                                )
+                            )
+                        )
                     }
 
                     val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -171,6 +366,8 @@ class ConversationFragment : Fragment() {
                 }
                 currentRecordingState = RECORDING_STATE.STOP
             } else {
+                addMessageToView(viewModel.systemMessage)
+
                 for (message in viewModel.messages) {
                     addMessageToView(message)
                 }
@@ -199,16 +396,24 @@ class ConversationFragment : Fragment() {
 
                     lifecycleScope.launch {
                         val transcriptionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTranscriptionResponse(TranscriptionRequestData(
-                                file = recordingCacheFile,
-                                prompt = viewModel.unfinishedMessage.content,
-                                temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
-                            ))
+                            viewModel.getTranscriptionResponse(
+                                TranscriptionRequestData(
+                                    file = recordingCacheFile,
+                                    prompt = viewModel.unfinishedMessage.content,
+                                    temperature = sharedPref.getFloat(
+                                        context?.getString(R.string.whisper_temperature_key),
+                                        0.0f
+                                    )
+                                )
+                            )
                         }
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), transcriptionResponse.text.trim())
+                        val userMessagePortion = Message(
+                            MESSAGE_ROLE.USER.toString().lowercase(),
+                            transcriptionResponse.text.trim()
+                        )
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
@@ -218,6 +423,7 @@ class ConversationFragment : Fragment() {
                     }
                     currentRecordingState = RECORDING_STATE.PAUSE
                 }
+
                 RECORDING_STATE.STOP -> {
                     recorder?.start()
                     (it as MaterialButton).icon =
@@ -227,6 +433,7 @@ class ConversationFragment : Fragment() {
                     binding.translateButton.setEnabled(false)
                     currentRecordingState = RECORDING_STATE.START
                 }
+
                 RECORDING_STATE.PAUSE -> {
                     recorder?.start()
                     (it as MaterialButton).icon =
@@ -256,37 +463,65 @@ class ConversationFragment : Fragment() {
 
                     lifecycleScope.launch {
                         val transcriptionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTranscriptionResponse(TranscriptionRequestData(
-                                file = recordingCacheFile,
-                                prompt = viewModel.unfinishedMessage.content,
-                                temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
-                            ))
+                            viewModel.getTranscriptionResponse(
+                                TranscriptionRequestData(
+                                    file = recordingCacheFile,
+                                    prompt = viewModel.unfinishedMessage.content,
+                                    temperature = sharedPref.getFloat(
+                                        context?.getString(R.string.whisper_temperature_key),
+                                        0.0f
+                                    )
+                                )
+                            )
                         }
 
                         configureRecorder()
 
-                        val userMessagePortion = Message(MESSAGE_ROLE.USER.toString().lowercase(), transcriptionResponse.text.trim())
+                        val userMessagePortion = Message(
+                            MESSAGE_ROLE.USER.toString().lowercase(),
+                            transcriptionResponse.text.trim()
+                        )
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
                         addMessageToView(userMessagePortion)
 
-                        val userMessageFormatted = "Orlando" + " said: " + viewModel.unfinishedMessage.content
+                        val userMessageFormatted =
+                            "Orlando" + " said: " + viewModel.unfinishedMessage.content
 
-                        viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), userMessageFormatted))
+                        viewModel.addMessage(
+                            Message(
+                                MESSAGE_ROLE.USER.toString().lowercase(),
+                                userMessageFormatted
+                            )
+                        )
                         viewModel.cleanUnfinishedMessage()
 
                         val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
                         val messages = listOf(viewModel.systemMessage) + lastMessages
 
                         val chatCompletionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(
-                                messages = messages,
-                                temperature = sharedPref.getFloat(context?.getString(R.string.chat_gpt_temperature_key), 0.0f),
-                                maxTokens = sharedPref.getInt(context?.getString(R.string.chat_gpt_max_tokens_key), 0),
-                                presencePenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_presence_penalty_key), 0.0f),
-                                frequencyPenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_frecuency_penalty_key), 0.0f),
-                            ))
+                            viewModel.getChatCompletionResponse(
+                                ChatCompletionRequestData(
+                                    messages = messages,
+                                    temperature = sharedPref.getFloat(
+                                        context?.getString(R.string.chat_gpt_temperature_key),
+                                        0.0f
+                                    ),
+                                    maxTokens = sharedPref.getInt(
+                                        context?.getString(R.string.chat_gpt_max_tokens_key),
+                                        0
+                                    ),
+                                    presencePenalty = sharedPref.getFloat(
+                                        context?.getString(R.string.chat_gpt_presence_penalty_key),
+                                        0.0f
+                                    ),
+                                    frequencyPenalty = sharedPref.getFloat(
+                                        context?.getString(R.string.chat_gpt_frecuency_penalty_key),
+                                        0.0f
+                                    ),
+                                )
+                            )
                         }
 
                         val chatCompletionMessage = Message(
@@ -299,11 +534,24 @@ class ConversationFragment : Fragment() {
                         addMessageToView(chatCompletionMessage)
 
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content), Voice(
-                                sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
-                                sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
-                                sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
-                                )))
+                            viewModel.getTextToSpeechResponse(
+                                TextToSpeechRequestData(
+                                    Input(chatCompletionMessage.content), Voice(
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_accent_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_voice_name_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_gender_key),
+                                            ""
+                                        ).toString()
+                                    )
+                                )
+                            )
                         }
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -317,15 +565,22 @@ class ConversationFragment : Fragment() {
                     }
                     currentRecordingState = RECORDING_STATE.STOP
                 }
+
                 RECORDING_STATE.STOP -> return@setOnClickListener
                 RECORDING_STATE.PAUSE -> {
                     recorder?.reset()
 
                     configureRecorder()
 
-                    val userMessageFormatted = "Orlando" + " said: " + viewModel.unfinishedMessage.content
+                    val userMessageFormatted =
+                        "Orlando" + " said: " + viewModel.unfinishedMessage.content
 
-                    viewModel.addMessage(Message(MESSAGE_ROLE.USER.toString().lowercase(), userMessageFormatted))
+                    viewModel.addMessage(
+                        Message(
+                            MESSAGE_ROLE.USER.toString().lowercase(),
+                            userMessageFormatted
+                        )
+                    )
                     viewModel.cleanUnfinishedMessage()
 
                     val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
@@ -341,13 +596,27 @@ class ConversationFragment : Fragment() {
 
                     lifecycleScope.launch {
                         val chatCompletionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatCompletionResponse(ChatCompletionRequestData(
-                                messages = messages,
-                                temperature = sharedPref.getFloat(context?.getString(R.string.chat_gpt_temperature_key), 0.0f),
-                                maxTokens = sharedPref.getInt(context?.getString(R.string.chat_gpt_max_tokens_key), 0),
-                                presencePenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_presence_penalty_key), 0.0f),
-                                frequencyPenalty = sharedPref.getFloat(context?.getString(R.string.chat_gpt_frecuency_penalty_key), 0.0f),
-                            ))
+                            viewModel.getChatCompletionResponse(
+                                ChatCompletionRequestData(
+                                    messages = messages,
+                                    temperature = sharedPref.getFloat(
+                                        context?.getString(R.string.chat_gpt_temperature_key),
+                                        0.0f
+                                    ),
+                                    maxTokens = sharedPref.getInt(
+                                        context?.getString(R.string.chat_gpt_max_tokens_key),
+                                        0
+                                    ),
+                                    presencePenalty = sharedPref.getFloat(
+                                        context?.getString(R.string.chat_gpt_presence_penalty_key),
+                                        0.0f
+                                    ),
+                                    frequencyPenalty = sharedPref.getFloat(
+                                        context?.getString(R.string.chat_gpt_frecuency_penalty_key),
+                                        0.0f
+                                    ),
+                                )
+                            )
                         }
 
                         val chatCompletionMessage = Message(
@@ -360,11 +629,24 @@ class ConversationFragment : Fragment() {
                         addMessageToView(chatCompletionMessage)
 
                         val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(chatCompletionMessage.content), Voice(
-                                sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
-                                sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
-                                sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
-                            )))
+                            viewModel.getTextToSpeechResponse(
+                                TextToSpeechRequestData(
+                                    Input(chatCompletionMessage.content), Voice(
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_accent_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_voice_name_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_gender_key),
+                                            ""
+                                        ).toString()
+                                    )
+                                )
+                            )
                         }
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -386,6 +668,7 @@ class ConversationFragment : Fragment() {
                 RECORDING_STATE.START -> {
                     return@setOnClickListener
                 }
+
                 RECORDING_STATE.STOP -> {
                     when (currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
@@ -397,6 +680,7 @@ class ConversationFragment : Fragment() {
                             binding.translateButton.setEnabled(true)
                             currentTranslatingState = TRANSLATING_STATE.START
                         }
+
                         TRANSLATING_STATE.START -> {
                             stopRecordingTranslator()
 
@@ -412,23 +696,42 @@ class ConversationFragment : Fragment() {
 
                             lifecycleScope.launch {
                                 val translationResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTranslationResponse(TranslationRequestData(
-                                        file = translatingCacheFile,
-                                        temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
-                                    ))
+                                    viewModel.getTranslationResponse(
+                                        TranslationRequestData(
+                                            file = translatingCacheFile,
+                                            temperature = sharedPref.getFloat(
+                                                context?.getString(R.string.whisper_temperature_key),
+                                                0.0f
+                                            )
+                                        )
+                                    )
                                 }
 
                                 configureTranslator()
 
                                 val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text), Voice(
-                                        sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
-                                        sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
-                                        sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
-                                    )))
+                                    viewModel.getTextToSpeechResponse(
+                                        TextToSpeechRequestData(
+                                            Input(translationResponse.text), Voice(
+                                                sharedPref.getString(
+                                                    context?.getString(R.string.text_to_speech_accent_key),
+                                                    ""
+                                                ).toString(),
+                                                sharedPref.getString(
+                                                    context?.getString(R.string.text_to_speech_voice_name_key),
+                                                    ""
+                                                ).toString(),
+                                                sharedPref.getString(
+                                                    context?.getString(R.string.text_to_speech_gender_key),
+                                                    ""
+                                                ).toString()
+                                            )
+                                        )
+                                    )
                                 }
 
-                                val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+                                val dataDecoded =
+                                    decodeBase64ToByteArray(textToSpeechResponse.audioContent)
 
                                 writeDataToFile(dataDecoded, syntheticCacheFile)
 
@@ -441,6 +744,7 @@ class ConversationFragment : Fragment() {
                         }
                     }
                 }
+
                 RECORDING_STATE.PAUSE -> {
                     when (currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
@@ -452,6 +756,7 @@ class ConversationFragment : Fragment() {
                             binding.translateButton.setEnabled(true)
                             currentTranslatingState = TRANSLATING_STATE.START
                         }
+
                         TRANSLATING_STATE.START -> {
                             stopRecordingTranslator()
 
@@ -467,23 +772,42 @@ class ConversationFragment : Fragment() {
 
                             lifecycleScope.launch {
                                 val translationResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTranslationResponse(TranslationRequestData(
-                                        file = translatingCacheFile,
-                                        temperature = sharedPref.getFloat(context?.getString(R.string.whisper_temperature_key), 0.0f)
-                                    ))
+                                    viewModel.getTranslationResponse(
+                                        TranslationRequestData(
+                                            file = translatingCacheFile,
+                                            temperature = sharedPref.getFloat(
+                                                context?.getString(R.string.whisper_temperature_key),
+                                                0.0f
+                                            )
+                                        )
+                                    )
                                 }
 
                                 configureTranslator()
 
                                 val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(TextToSpeechRequestData(Input(translationResponse.text), Voice(
-                                        sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "").toString(),
-                                        sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
-                                        sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
-                                    )))
+                                    viewModel.getTextToSpeechResponse(
+                                        TextToSpeechRequestData(
+                                            Input(translationResponse.text), Voice(
+                                                sharedPref.getString(
+                                                    context?.getString(R.string.text_to_speech_accent_key),
+                                                    ""
+                                                ).toString(),
+                                                sharedPref.getString(
+                                                    context?.getString(R.string.text_to_speech_voice_name_key),
+                                                    ""
+                                                ).toString(),
+                                                sharedPref.getString(
+                                                    context?.getString(R.string.text_to_speech_gender_key),
+                                                    ""
+                                                ).toString()
+                                            )
+                                        )
+                                    )
                                 }
 
-                                val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+                                val dataDecoded =
+                                    decodeBase64ToByteArray(textToSpeechResponse.audioContent)
 
                                 writeDataToFile(dataDecoded, syntheticCacheFile)
 
@@ -544,6 +868,7 @@ class ConversationFragment : Fragment() {
                     Snackbar.LENGTH_SHORT
                 ).show()
             }
+
             else -> {
                 // You can directly ask for the permission.
                 // The registered ActivityResultCallback gets the result of this request.
@@ -666,7 +991,8 @@ class ConversationFragment : Fragment() {
                 prepare()
             }
         } catch (ioException: IOException) {
-            val silence = "//NExAARMI4wAEmMTOXAOCYbb/uP3uyYDCwAAAAAAAAAAAAgLJkyZMmnYOAgCAIAgD7xOgkD97vLlwfB8HzmUKOIZfIf/IdZ8uHuwIn7/y/wQTAUQcDAIkVQGiiAiQEB//NExA4QgN5IADDGcFUFDBbeRzk3bXKrkVkM6beFGFWGjIqUAiBK24SQmKpr3sj/ZMR5u9QmQhLUO0IYtM1Xe6kr4jnSPGkfVChlVf2219q0QUbsJrSY4KfFYZ+jT69e//NExB8SQIo0AHjETZt/+32vob37Kt/6m6zeFLP5y325zrH0S2fi60IKxny/9WNyf1bH9/vrpQBQL1mOgeRATYRhIcdh/PdixR6ybj8rtkWbqKZ5J08m0T6JI+gXeuso//NExCkQgDIsAHpGAMG1ANY1zw2oAAakcNALFSCULe8qToGstWgX7QyqBUGILO0cTpIbMjvR2IHlxdYuTcC9j6qDda0oC1IwolTEHiQSceMR6SrJkF2GgG0IjyZXaPDT//NExDoSIDYsAMJSBI4JgKEJ9JggNEw6+17ppQMjR9jQ5ClgiMkuYPUalHpY+ufa5KlDYnuoMKAb2nH0qGvGlNqnLEEWUB2SB9dYfQQNDpAwOScnDBsPpUmxQGoLCr+p//NExEQQ8D4wAErMBAw0Sq9l3VNZvG1ty1WeuT5e0s26U1L/+7NdFl20WyWVf9bWrTKrvR3RohNYfiebKhNwBeD7+Fvym92dD9Xnfhze7utFApoxouTF/iWMy789ds0j//NExFMRAdYsAHhEmT0BPvb+6NRF9i7Wc03vszNKr0Qn1X36JvVexL16Mz3kuQE8HpgKCxEDMJJY2Zxr3k3Biw2QmBPNdSoVwSp57J5aVnjrd/eH+eicX+naRT/NW4LJ//NExGISCfYoAHiEmO7NnZjuIerlu1qSZfuTdkJHBFj9Dy4eOdDPPYz05HcIn0xGNiPVl9yPn/dj/t3/Jerl53i+0/81BWA0HzermRGMkhAQhNk72CaewACNxaV3NEQk//NExGwUKXIkAHjElULdziC2gDMPzHwBCQyOfAPQMh7w/xHmZh/q6cPeH+7p/b4O4YH+jeAOHuD2gDgh3f3////7rdf8voEcQIk11olGTY4iUfQkkmxHRkfQIgsTTIQy//NExG4VMLo8AHmGTUqQpFLKwqJnqilFqopZpETNLIkWqoUOLIWaRImrQodVQocDAQpwwEKoCArAISTAQqhQFaFAVgYUYUMKNVXZijMaqsVVjMahWNVXYUcDATUKAlAE//NExGwhGmYwAGJGuQSgYUdCjYoqEUCjpuCoQ3EXFFZHQhsU0YplagqjjAIEFDAwQcAFjq1llkssqOQkMFBAwQcDW/+wgaqIGIiVVVdNP7CStMMQ//7VVVEXJVVVf/+h//NExDoRgK08ABjGTStNIlb//lVV9IqqqkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+            val silence =
+                "//NExAARMI4wAEmMTOXAOCYbb/uP3uyYDCwAAAAAAAAAAAAgLJkyZMmnYOAgCAIAgD7xOgkD97vLlwfB8HzmUKOIZfIf/IdZ8uHuwIn7/y/wQTAUQcDAIkVQGiiAiQEB//NExA4QgN5IADDGcFUFDBbeRzk3bXKrkVkM6beFGFWGjIqUAiBK24SQmKpr3sj/ZMR5u9QmQhLUO0IYtM1Xe6kr4jnSPGkfVChlVf2219q0QUbsJrSY4KfFYZ+jT69e//NExB8SQIo0AHjETZt/+32vob37Kt/6m6zeFLP5y325zrH0S2fi60IKxny/9WNyf1bH9/vrpQBQL1mOgeRATYRhIcdh/PdixR6ybj8rtkWbqKZ5J08m0T6JI+gXeuso//NExCkQgDIsAHpGAMG1ANY1zw2oAAakcNALFSCULe8qToGstWgX7QyqBUGILO0cTpIbMjvR2IHlxdYuTcC9j6qDda0oC1IwolTEHiQSceMR6SrJkF2GgG0IjyZXaPDT//NExDoSIDYsAMJSBI4JgKEJ9JggNEw6+17ppQMjR9jQ5ClgiMkuYPUalHpY+ufa5KlDYnuoMKAb2nH0qGvGlNqnLEEWUB2SB9dYfQQNDpAwOScnDBsPpUmxQGoLCr+p//NExEQQ8D4wAErMBAw0Sq9l3VNZvG1ty1WeuT5e0s26U1L/+7NdFl20WyWVf9bWrTKrvR3RohNYfiebKhNwBeD7+Fvym92dD9Xnfhze7utFApoxouTF/iWMy789ds0j//NExFMRAdYsAHhEmT0BPvb+6NRF9i7Wc03vszNKr0Qn1X36JvVexL16Mz3kuQE8HpgKCxEDMJJY2Zxr3k3Biw2QmBPNdSoVwSp57J5aVnjrd/eH+eicX+naRT/NW4LJ//NExGISCfYoAHiEmO7NnZjuIerlu1qSZfuTdkJHBFj9Dy4eOdDPPYz05HcIn0xGNiPVl9yPn/dj/t3/Jerl53i+0/81BWA0HzermRGMkhAQhNk72CaewACNxaV3NEQk//NExGwUKXIkAHjElULdziC2gDMPzHwBCQyOfAPQMh7w/xHmZh/q6cPeH+7p/b4O4YH+jeAOHuD2gDgh3f3////7rdf8voEcQIk11olGTY4iUfQkkmxHRkfQIgsTTIQy//NExG4VMLo8AHmGTUqQpFLKwqJnqilFqopZpETNLIkWqoUOLIWaRImrQodVQocDAQpwwEKoCArAISTAQqhQFaFAVgYUYUMKNVXZijMaqsVVjMahWNVXYUcDATUKAlAE//NExGwhGmYwAGJGuQSgYUdCjYoqEUCjpuCoQ3EXFFZHQhsU0YplagqjjAIEFDAwQcAFjq1llkssqOQkMFBAwQcDW/+wgaqIGIiVVVdNP7CStMMQ//7VVVEXJVVVf/+h//NExDoRgK08ABjGTStNIlb//lVV9IqqqkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
 
             val dataDecoded = decodeBase64ToByteArray(silence)
 
@@ -738,6 +1064,7 @@ class ConversationFragment : Fragment() {
                 )
                 messageView.setTextColor(Color.WHITE)
             }
+
             MESSAGE_ROLE.ASSISTANT.toString().lowercase() -> {
                 layoutParams.gravity = Gravity.START
                 messageView.maxWidth = (screenWidth * 0.6).toInt()
@@ -746,6 +1073,7 @@ class ConversationFragment : Fragment() {
                     R.drawable.round_corner_textview_assistant
                 )
             }
+
             MESSAGE_ROLE.USER.toString().lowercase() -> {
                 layoutParams.gravity = Gravity.END
                 messageView.maxWidth = (screenWidth * 0.6).toInt()
@@ -776,11 +1104,17 @@ class ConversationFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_settings -> {
+            R.id.item_settings -> {
                 val intent = Intent(activity, SettingsActivity::class.java)
                 startActivity(intent)
                 true
             }
+
+            R.id.item_change_conversation -> {
+                viewModel.nextConversation()
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

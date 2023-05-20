@@ -26,12 +26,19 @@ class ConversationViewModel(private val apisRepository: ApisRepository) : ViewMo
     private val _currentConversation = MutableLiveData<Int>(0)
     val currentConversation: LiveData<Int> = _currentConversation
 
+    private val _previousConversation = MutableLiveData<Int>(0)
+    val previousConversation: LiveData<Int> = _previousConversation
+
     fun setConversations(conversations: List<ConversationWithUtterances>) {
         _conversations.value = conversations
     }
 
-    fun setCurrentConversation(newConversation: Int) {
-        _currentConversation.value = newConversation
+    fun nextConversation() {
+        _currentConversation.value = _currentConversation.value?.plus(1)
+    }
+
+    fun updatePreviousConversation() {
+        _previousConversation.value = _currentConversation.value
     }
 
     fun addMessageToUnfinishedMessage(messagePortion: Message) {
