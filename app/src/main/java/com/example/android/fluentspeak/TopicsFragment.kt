@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.onNavDestinationSelected
+import androidx.viewpager2.widget.ViewPager2
 import com.example.android.fluentspeak.database.RedditDatabase
 import com.example.android.fluentspeak.databinding.FragmentTopicsBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -67,14 +68,10 @@ class TopicsFragment : Fragment() {
                 }
 
                 sharedViewModel.setConversations(conversations)
-/*
-                val controller = activity?.findNavController(R.id.nav_host_fragment)
-                val menu: Menu? =
-                    activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)?.menu
 
-                val item = menu?.findItem(R.id.conversationFragment)
+                val viewPager2 = requireActivity().findViewById<ViewPager2>(R.id.pager)
 
-                NavigationUI.onNavDestinationSelected(item!!, controller!!)*/
+                viewPager2.setCurrentItem(1)
             }
         }
 
