@@ -67,14 +67,14 @@ class TopicsFragment : Fragment() {
                 }
 
                 sharedViewModel.setConversations(conversations)
-
+/*
                 val controller = activity?.findNavController(R.id.nav_host_fragment)
                 val menu: Menu? =
                     activity?.findViewById<BottomNavigationView>(R.id.bottom_navigation)?.menu
 
                 val item = menu?.findItem(R.id.conversationFragment)
 
-                NavigationUI.onNavDestinationSelected(item!!, controller!!)
+                NavigationUI.onNavDestinationSelected(item!!, controller!!)*/
             }
         }
 

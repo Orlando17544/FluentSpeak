@@ -1,7 +1,6 @@
 package com.example.android.fluentspeak
 
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Resources
@@ -13,22 +12,18 @@ import android.os.Bundle
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.ui.onNavDestinationSelected
 import com.example.android.fluentspeak.database.ConversationWithUtterances
 import com.example.android.fluentspeak.database.Utterance
-import com.example.android.fluentspeak.databinding.FragmentConversationBinding
-import com.example.android.fluentspeak.databinding.FragmentSettingsBinding
+import com.example.android.fluentspeak.databinding.FragmentChatBinding
 import com.example.android.fluentspeak.network.*
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
@@ -79,8 +74,8 @@ class ConversationFragment : Fragment() {
 
     private val sharedViewModel: MainViewModel by activityViewModels()
 
-    private val viewModel: ConversationViewModel by viewModels<ConversationViewModel> {
-        ConversationViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
+    private val viewModel: ChatViewModel by viewModels<ChatViewModel> {
+        ChatViewModelFactory((requireContext().applicationContext as FluentSpeakApplication).apisRepository)
     }
 
     override fun onCreateView(
@@ -88,7 +83,7 @@ class ConversationFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val binding = FragmentConversationBinding.inflate(inflater)
+        val binding = FragmentChatBinding.inflate(inflater)
 
         sharedPref = context?.getSharedPreferences(
             getString(R.string.preference_file_key),
@@ -373,7 +368,7 @@ class ConversationFragment : Fragment() {
         return binding.root
     }
 
-    fun setupListeners(binding: FragmentConversationBinding) {
+    fun setupListeners(binding: FragmentChatBinding) {
         binding.recordButton.setOnClickListener {
 
             when (currentRecordingState) {
@@ -1025,7 +1020,7 @@ class ConversationFragment : Fragment() {
         fos.close()
     }
 
-    private fun disableButtons(binding: FragmentConversationBinding) {
+    private fun disableButtons(binding: FragmentChatBinding) {
         binding.recordButton.setEnabled(false)
         binding.stopButton.setEnabled(false)
         binding.translateButton.setEnabled(false)
