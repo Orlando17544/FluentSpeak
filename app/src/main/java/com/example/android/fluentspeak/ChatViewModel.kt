@@ -6,6 +6,7 @@ import com.example.android.fluentspeak.database.ConversationWithUtterances
 import com.example.android.fluentspeak.network.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import java.util.concurrent.TimeoutException
 
 class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
     private val _systemMessage = Message(MESSAGE_ROLE.SYSTEM.toString().lowercase(), "You are a dialogue creator")
@@ -172,13 +173,16 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
     suspend fun getTextToSpeechResponse(textToSpeechRequestData: TextToSpeechRequestData): TextToSpeechResponse {
         var textToSpeechResponse: TextToSpeechResponse? = null
 
-        try {
-            textToSpeechResponse =
-                apisRepository.googleCloudApi.getTextToSpeechResponse(textToSpeechRequestData)
-        } catch (e: Exception) {
+        textToSpeechResponse =
+            apisRepository.googleCloudApi.getTextToSpeechResponse(textToSpeechRequestData)
+        /*try {
+
+        } catch (e: TimeoutException) {
             //result.postValue(Message("exception", "Failure: ${e.message}"))
             e.message?.let { Log.e("SPEECH_RESPONSE_ERROR", it) }
-        }
+        }*/
+
+
 
         return textToSpeechResponse ?: TextToSpeechResponse("")
     }

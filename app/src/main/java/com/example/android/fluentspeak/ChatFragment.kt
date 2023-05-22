@@ -100,6 +100,7 @@ class ConversationFragment : Fragment() {
                 viewModel.updatePreviousConversation()
 
                 chatLayout?.removeAllViews()
+                viewModel.cleanMessages()
 
                 addMessageToView(viewModel.systemMessage)
 
@@ -138,8 +139,6 @@ class ConversationFragment : Fragment() {
                     )
                 )
 
-                viewModel.cleanMessages()
-
                 viewModel.addMessage(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
@@ -169,12 +168,12 @@ class ConversationFragment : Fragment() {
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
-                    addMessageToView(
+                    /*addMessageToView(
                         Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             utteranceFormatted
                         )
-                    )
+                    )*/
 
                     viewModel.addMessage(
                         Message(
@@ -234,6 +233,8 @@ class ConversationFragment : Fragment() {
             // If user selected another subreddit
             if (viewModel.conversations.value != it) {
                 viewModel.setConversations(it)
+
+                chatLayout?.removeAllViews()
 
                 addMessageToView(viewModel.systemMessage)
 
@@ -299,12 +300,12 @@ class ConversationFragment : Fragment() {
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
-                    addMessageToView(
+                    /*addMessageToView(
                         Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             utteranceFormatted
                         )
-                    )
+                    )*/
 
                     viewModel.addMessage(
                         Message(
