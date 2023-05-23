@@ -9,6 +9,8 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -30,9 +32,13 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.w3c.dom.Text
+import retrofit2.HttpException
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Locale
+import java.util.concurrent.TimeoutException
 
 
 enum class RECORDING_STATE {
@@ -54,7 +60,7 @@ val USER_RESPONSE = 1
 val MESSAGES_TO_CHATGPT =
     UTTERANCES_PER_CONVERSATION + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
 
-class ConversationFragment : Fragment() {
+class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private var currentRecordingState = RECORDING_STATE.STOP
     private var currentTranslatingState = TRANSLATING_STATE.STOP
@@ -67,6 +73,8 @@ class ConversationFragment : Fragment() {
     private lateinit var recordingCacheFile: File
     private lateinit var translatingCacheFile: File
     private lateinit var syntheticCacheFile: File
+
+    private var textToSpeech: TextToSpeech? = null
 
     private var chatLayout: LinearLayout? = null
 
@@ -84,6 +92,9 @@ class ConversationFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val binding = FragmentChatBinding.inflate(inflater)
+
+        // TextToSpeech(Context: this, OnInitListener: this)
+        textToSpeech = TextToSpeech(requireContext(), this)
 
         sharedPref = context?.getSharedPreferences(
             getString(R.string.preference_file_key),
@@ -194,35 +205,42 @@ class ConversationFragment : Fragment() {
                 }
 
                 lifecycleScope.launch {
-                    val textToSpeechResponse = withContext(Dispatchers.IO) {
-                        viewModel.getTextToSpeechResponse(
-                            TextToSpeechRequestData(
-                                Input(conversationTitleFormatted + starterUtterance.text), Voice(
-                                    sharedPref.getString(
-                                        context?.getString(R.string.text_to_speech_accent_key),
-                                        ""
-                                    ).toString(),
-                                    sharedPref.getString(
-                                        context?.getString(R.string.text_to_speech_voice_name_key),
-                                        ""
-                                    ).toString(),
-                                    sharedPref.getString(
-                                        context?.getString(R.string.text_to_speech_gender_key),
-                                        ""
-                                    ).toString()
+
+                    try {
+                        val textToSpeechResponse = withContext(Dispatchers.IO) {
+                            viewModel.getTextToSpeechResponse(
+                                TextToSpeechRequestData(
+                                    Input(conversationTitleFormatted + starterUtterance.text), Voice(
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_accent_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_voice_name_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_gender_key),
+                                            ""
+                                        ).toString()
+                                    )
                                 )
                             )
-                        )
+                        }
+                        val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                        writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                        configurePlayer()
+
+                        startPlayer()
+                        resetUntilFinishedPlaying(updateButtons)
+                    } catch (e: Exception) {
+                        // HttpException
+                        Log.e("ChatFragment: ", e.toString())
+                        textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                        updateButtons()
                     }
-
-                    val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                    writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                    configurePlayer()
-
-                    startPlayer()
-                    resetUntilFinishedPlaying(updateButtons)
                 }
                 currentRecordingState = RECORDING_STATE.STOP
             }
@@ -326,35 +344,42 @@ class ConversationFragment : Fragment() {
                 }
 
                 lifecycleScope.launch {
-                    val textToSpeechResponse = withContext(Dispatchers.IO) {
-                        viewModel.getTextToSpeechResponse(
-                            TextToSpeechRequestData(
-                                Input(conversationTitleFormatted + starterUtterance.text), Voice(
-                                    sharedPref.getString(
-                                        context?.getString(R.string.text_to_speech_accent_key),
-                                        ""
-                                    ).toString(),
-                                    sharedPref.getString(
-                                        context?.getString(R.string.text_to_speech_voice_name_key),
-                                        ""
-                                    ).toString(),
-                                    sharedPref.getString(
-                                        context?.getString(R.string.text_to_speech_gender_key),
-                                        ""
-                                    ).toString()
+                    try {
+                        val textToSpeechResponse = withContext(Dispatchers.IO) {
+                            viewModel.getTextToSpeechResponse(
+                                TextToSpeechRequestData(
+                                    Input(conversationTitleFormatted + starterUtterance.text), Voice(
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_accent_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_voice_name_key),
+                                            ""
+                                        ).toString(),
+                                        sharedPref.getString(
+                                            context?.getString(R.string.text_to_speech_gender_key),
+                                            ""
+                                        ).toString()
+                                    )
                                 )
                             )
-                        )
+                        }
+
+                        val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                        writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                        configurePlayer()
+
+                        startPlayer()
+                        resetUntilFinishedPlaying(updateButtons)
+                    } catch (e: Exception) {
+                        // HttpException
+                        Log.e("ChatFragment: ", e.toString())
+                        textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                        updateButtons()
                     }
-
-                    val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                    writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                    configurePlayer()
-
-                    startPlayer()
-                    resetUntilFinishedPlaying(updateButtons)
                 }
                 currentRecordingState = RECORDING_STATE.STOP
             }
@@ -519,35 +544,42 @@ class ConversationFragment : Fragment() {
 
                         addMessageToView(chatCompletionMessage)
 
-                        val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(
-                                TextToSpeechRequestData(
-                                    Input(chatCompletionMessage.content), Voice(
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_accent_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_voice_name_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_gender_key),
-                                            ""
-                                        ).toString()
+                        try {
+                            val textToSpeechResponse = withContext(Dispatchers.IO) {
+                                viewModel.getTextToSpeechResponse(
+                                    TextToSpeechRequestData(
+                                        Input(chatCompletionMessage.content), Voice(
+                                            sharedPref.getString(
+                                                context?.getString(R.string.text_to_speech_accent_key),
+                                                ""
+                                            ).toString(),
+                                            sharedPref.getString(
+                                                context?.getString(R.string.text_to_speech_voice_name_key),
+                                                ""
+                                            ).toString(),
+                                            sharedPref.getString(
+                                                context?.getString(R.string.text_to_speech_gender_key),
+                                                ""
+                                            ).toString()
+                                        )
                                     )
                                 )
-                            )
+                            }
+
+                            val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                            writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                            configurePlayer()
+
+                            startPlayer()
+                            resetUntilFinishedPlaying(updateButtons)
+                        } catch (e: Exception) {
+                            // HttpException
+                            Log.e("ChatFragment: ", e.toString())
+                            textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
+                            updateButtons()
                         }
-
-                        val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                        writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                        configurePlayer()
-
-                        startPlayer()
-                        resetUntilFinishedPlaying(updateButtons)
                     }
                     currentRecordingState = RECORDING_STATE.STOP
                 }
@@ -614,35 +646,42 @@ class ConversationFragment : Fragment() {
 
                         addMessageToView(chatCompletionMessage)
 
-                        val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(
-                                TextToSpeechRequestData(
-                                    Input(chatCompletionMessage.content), Voice(
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_accent_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_voice_name_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_gender_key),
-                                            ""
-                                        ).toString()
+                        try {
+                            val textToSpeechResponse = withContext(Dispatchers.IO) {
+                                viewModel.getTextToSpeechResponse(
+                                    TextToSpeechRequestData(
+                                        Input(chatCompletionMessage.content), Voice(
+                                            sharedPref.getString(
+                                                context?.getString(R.string.text_to_speech_accent_key),
+                                                ""
+                                            ).toString(),
+                                            sharedPref.getString(
+                                                context?.getString(R.string.text_to_speech_voice_name_key),
+                                                ""
+                                            ).toString(),
+                                            sharedPref.getString(
+                                                context?.getString(R.string.text_to_speech_gender_key),
+                                                ""
+                                            ).toString()
+                                        )
                                     )
                                 )
-                            )
+                            }
+
+                            val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                            writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                            configurePlayer()
+
+                            startPlayer()
+                            resetUntilFinishedPlaying(updateButtons)
+                        } catch (e: Exception) {
+                            // HttpException
+                            Log.e("ChatFragment: ", e.toString())
+                            textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
+                            updateButtons()
                         }
-
-                        val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                        writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                        configurePlayer()
-
-                        startPlayer()
-                        resetUntilFinishedPlaying(updateButtons)
                     }
                     currentRecordingState = RECORDING_STATE.STOP
                 }
@@ -695,36 +734,43 @@ class ConversationFragment : Fragment() {
 
                                 configureTranslator()
 
-                                val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(
-                                        TextToSpeechRequestData(
-                                            Input(translationResponse.text), Voice(
-                                                sharedPref.getString(
-                                                    context?.getString(R.string.text_to_speech_accent_key),
-                                                    ""
-                                                ).toString(),
-                                                sharedPref.getString(
-                                                    context?.getString(R.string.text_to_speech_voice_name_key),
-                                                    ""
-                                                ).toString(),
-                                                sharedPref.getString(
-                                                    context?.getString(R.string.text_to_speech_gender_key),
-                                                    ""
-                                                ).toString()
+                                try {
+                                    val textToSpeechResponse = withContext(Dispatchers.IO) {
+                                        viewModel.getTextToSpeechResponse(
+                                            TextToSpeechRequestData(
+                                                Input(translationResponse.text), Voice(
+                                                    sharedPref.getString(
+                                                        context?.getString(R.string.text_to_speech_accent_key),
+                                                        ""
+                                                    ).toString(),
+                                                    sharedPref.getString(
+                                                        context?.getString(R.string.text_to_speech_voice_name_key),
+                                                        ""
+                                                    ).toString(),
+                                                    sharedPref.getString(
+                                                        context?.getString(R.string.text_to_speech_gender_key),
+                                                        ""
+                                                    ).toString()
+                                                )
                                             )
                                         )
-                                    )
+                                    }
+
+                                    val dataDecoded =
+                                        decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                                    writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                                    configurePlayer()
+
+                                    startPlayer()
+                                    resetUntilFinishedPlaying(updateButtons)
+                                } catch (e: Exception) {
+                                    // HttpException
+                                    Log.e("ChatFragment: ", e.toString())
+                                    textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                                    updateButtons()
                                 }
-
-                                val dataDecoded =
-                                    decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                                writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                                configurePlayer()
-
-                                startPlayer()
-                                resetUntilFinishedPlaying(updateButtons)
                             }
                             currentTranslatingState = TRANSLATING_STATE.STOP
                         }
@@ -771,36 +817,43 @@ class ConversationFragment : Fragment() {
 
                                 configureTranslator()
 
-                                val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTextToSpeechResponse(
-                                        TextToSpeechRequestData(
-                                            Input(translationResponse.text), Voice(
-                                                sharedPref.getString(
-                                                    context?.getString(R.string.text_to_speech_accent_key),
-                                                    ""
-                                                ).toString(),
-                                                sharedPref.getString(
-                                                    context?.getString(R.string.text_to_speech_voice_name_key),
-                                                    ""
-                                                ).toString(),
-                                                sharedPref.getString(
-                                                    context?.getString(R.string.text_to_speech_gender_key),
-                                                    ""
-                                                ).toString()
+                                try {
+                                    val textToSpeechResponse = withContext(Dispatchers.IO) {
+                                        viewModel.getTextToSpeechResponse(
+                                            TextToSpeechRequestData(
+                                                Input(translationResponse.text), Voice(
+                                                    sharedPref.getString(
+                                                        context?.getString(R.string.text_to_speech_accent_key),
+                                                        ""
+                                                    ).toString(),
+                                                    sharedPref.getString(
+                                                        context?.getString(R.string.text_to_speech_voice_name_key),
+                                                        ""
+                                                    ).toString(),
+                                                    sharedPref.getString(
+                                                        context?.getString(R.string.text_to_speech_gender_key),
+                                                        ""
+                                                    ).toString()
+                                                )
                                             )
                                         )
-                                    )
+                                    }
+
+                                    val dataDecoded =
+                                        decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+                                    writeDataToFile(dataDecoded, syntheticCacheFile)
+
+                                    configurePlayer()
+
+                                    startPlayer()
+                                    resetUntilFinishedPlaying(updateButtons)
+                                } catch (e: Exception) {
+                                    // HttpException
+                                    Log.e("ChatFragment: ", e.toString())
+                                    textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                                    updateButtons()
                                 }
-
-                                val dataDecoded =
-                                    decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                                writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                                configurePlayer()
-
-                                startPlayer()
-                                resetUntilFinishedPlaying(updateButtons)
                             }
                             currentTranslatingState = TRANSLATING_STATE.STOP
                         }
@@ -906,6 +959,10 @@ class ConversationFragment : Fragment() {
         super.onDestroyView()
 
         chatLayout = null
+
+        textToSpeech?.stop()
+        textToSpeech?.shutdown()
+
     }
 
     private fun createRecorder() {
@@ -1102,6 +1159,16 @@ class ConversationFragment : Fragment() {
             }
 
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = textToSpeech?.setLanguage(Locale.US)
+
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("TTS","The Language not supported!")
+            }
         }
     }
 }

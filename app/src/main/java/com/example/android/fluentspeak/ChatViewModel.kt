@@ -182,8 +182,6 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
             e.message?.let { Log.e("SPEECH_RESPONSE_ERROR", it) }
         }*/
 
-
-
         return textToSpeechResponse ?: TextToSpeechResponse("")
     }
 }
