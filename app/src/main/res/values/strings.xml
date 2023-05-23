@@ -57,8 +57,7 @@
 
     <string-array name="topics">
         <item>anime</item>
-        <item>technology</item>
+        <item>conspiracy</item>
         <item>relationships</item>
-        <item>games</item>
     </string-array>
 </resources>
