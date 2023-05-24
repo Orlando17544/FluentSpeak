@@ -581,17 +581,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             }
 
                             lifecycleScope.launch {
-                                val translationResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTranslationResponse(
-                                        TranslationRequestData(
-                                            file = translatingCacheFile,
-                                            temperature = sharedPref.getFloat(
-                                                context?.getString(R.string.whisper_temperature_key),
-                                                0.0f
-                                            )
-                                        )
-                                    )
-                                }
+                                val translationResponse = getTranslationResponse()
 
                                 configureTranslator()
 
@@ -645,17 +635,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             }
 
                             lifecycleScope.launch {
-                                val translationResponse = withContext(Dispatchers.IO) {
-                                    viewModel.getTranslationResponse(
-                                        TranslationRequestData(
-                                            file = translatingCacheFile,
-                                            temperature = sharedPref.getFloat(
-                                                context?.getString(R.string.whisper_temperature_key),
-                                                0.0f
-                                            )
-                                        )
-                                    )
-                                }
+                                val translationResponse = getTranslationResponse()
 
                                 configureTranslator()
 
@@ -838,6 +818,20 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 TranscriptionRequestData(
                     file = recordingCacheFile,
                     prompt = viewModel.unfinishedMessage.content,
+                    temperature = sharedPref.getFloat(
+                        context?.getString(R.string.whisper_temperature_key),
+                        0.0f
+                    )
+                )
+            )
+        }
+    }
+
+    suspend fun getTranslationResponse(): TranslationResponse {
+        return withContext(Dispatchers.IO) {
+            viewModel.getTranslationResponse(
+                TranslationRequestData(
+                    file = translatingCacheFile,
                     temperature = sharedPref.getFloat(
                         context?.getString(R.string.whisper_temperature_key),
                         0.0f
