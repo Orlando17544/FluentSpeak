@@ -454,29 +454,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
                         val messages = listOf(viewModel.systemMessage) + lastMessages
 
-                        val chatCompletionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatCompletionResponse(
-                                ChatCompletionRequestData(
-                                    messages = messages,
-                                    temperature = sharedPref.getFloat(
-                                        context?.getString(R.string.chat_gpt_temperature_key),
-                                        0.0f
-                                    ),
-                                    maxTokens = sharedPref.getInt(
-                                        context?.getString(R.string.chat_gpt_max_tokens_key),
-                                        0
-                                    ),
-                                    presencePenalty = sharedPref.getFloat(
-                                        context?.getString(R.string.chat_gpt_presence_penalty_key),
-                                        0.0f
-                                    ),
-                                    frequencyPenalty = sharedPref.getFloat(
-                                        context?.getString(R.string.chat_gpt_frecuency_penalty_key),
-                                        0.0f
-                                    ),
-                                )
-                            )
-                        }
+                        val chatCompletionResponse = getChatCompletionResponse(messages)
 
                         val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
@@ -537,29 +515,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     }
 
                     lifecycleScope.launch {
-                        val chatCompletionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getChatCompletionResponse(
-                                ChatCompletionRequestData(
-                                    messages = messages,
-                                    temperature = sharedPref.getFloat(
-                                        context?.getString(R.string.chat_gpt_temperature_key),
-                                        0.0f
-                                    ),
-                                    maxTokens = sharedPref.getInt(
-                                        context?.getString(R.string.chat_gpt_max_tokens_key),
-                                        0
-                                    ),
-                                    presencePenalty = sharedPref.getFloat(
-                                        context?.getString(R.string.chat_gpt_presence_penalty_key),
-                                        0.0f
-                                    ),
-                                    frequencyPenalty = sharedPref.getFloat(
-                                        context?.getString(R.string.chat_gpt_frecuency_penalty_key),
-                                        0.0f
-                                    ),
-                                )
-                            )
-                        }
+                        val chatCompletionResponse = getChatCompletionResponse(messages)
 
                         val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
@@ -830,6 +786,32 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         textToSpeech?.stop()
         textToSpeech?.shutdown()
 
+    }
+
+    suspend fun getChatCompletionResponse(messages: List<Message>): ChatCompletionResponse {
+        return withContext(Dispatchers.IO) {
+            viewModel.getChatCompletionResponse(
+                ChatCompletionRequestData(
+                    messages = messages,
+                    temperature = sharedPref.getFloat(
+                        context?.getString(R.string.chat_gpt_temperature_key),
+                        0.0f
+                    ),
+                    maxTokens = sharedPref.getInt(
+                        context?.getString(R.string.chat_gpt_max_tokens_key),
+                        0
+                    ),
+                    presencePenalty = sharedPref.getFloat(
+                        context?.getString(R.string.chat_gpt_presence_penalty_key),
+                        0.0f
+                    ),
+                    frequencyPenalty = sharedPref.getFloat(
+                        context?.getString(R.string.chat_gpt_frecuency_penalty_key),
+                        0.0f
+                    ),
+                )
+            )
+        }
     }
 
     suspend fun getTextToSpeechResponse(text: String,
