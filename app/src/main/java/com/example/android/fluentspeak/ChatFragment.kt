@@ -207,26 +207,8 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 lifecycleScope.launch {
 
                     try {
-                        val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(
-                                TextToSpeechRequestData(
-                                    Input(conversationTitleFormatted + starterUtterance.text), Voice(
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_accent_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_voice_name_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_gender_key),
-                                            ""
-                                        ).toString()
-                                    )
-                                )
-                            )
-                        }
+                        val textToSpeechResponse = getTextToSpeechResponse(conversationTitleFormatted + starterUtterance.text)
+
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
 
                         writeDataToFile(dataDecoded, syntheticCacheFile)
@@ -345,30 +327,13 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 lifecycleScope.launch {
                     try {
-                        val textToSpeechResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTextToSpeechResponse(
-                                TextToSpeechRequestData(
-                                    Input(conversationTitleFormatted + starterUtterance.text), Voice(
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_accent_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_voice_name_key),
-                                            ""
-                                        ).toString(),
-                                        sharedPref.getString(
-                                            context?.getString(R.string.text_to_speech_gender_key),
-                                            ""
-                                        ).toString()
-                                    )
-                                )
-                            )
-                        }
+                        val textToSpeechResponse = getTextToSpeechResponse(conversationTitleFormatted + starterUtterance.text)
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+                        //val dataDecoded2 = decodeBase64ToByteArray(textToSpeechResponse2.audioContent)
 
                         writeDataToFile(dataDecoded, syntheticCacheFile)
+                        //writeDataToFile(dataDecoded2, syntheticCacheFile, true)
 
                         configurePlayer()
 
@@ -545,26 +510,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         addMessageToView(chatCompletionMessage)
 
                         try {
-                            val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                viewModel.getTextToSpeechResponse(
-                                    TextToSpeechRequestData(
-                                        Input(chatCompletionMessage.content), Voice(
-                                            sharedPref.getString(
-                                                context?.getString(R.string.text_to_speech_accent_key),
-                                                ""
-                                            ).toString(),
-                                            sharedPref.getString(
-                                                context?.getString(R.string.text_to_speech_voice_name_key),
-                                                ""
-                                            ).toString(),
-                                            sharedPref.getString(
-                                                context?.getString(R.string.text_to_speech_gender_key),
-                                                ""
-                                            ).toString()
-                                        )
-                                    )
-                                )
-                            }
+                            val textToSpeechResponse = getTextToSpeechResponse(chatCompletionMessage.content)
 
                             val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
 
@@ -647,26 +593,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         addMessageToView(chatCompletionMessage)
 
                         try {
-                            val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                viewModel.getTextToSpeechResponse(
-                                    TextToSpeechRequestData(
-                                        Input(chatCompletionMessage.content), Voice(
-                                            sharedPref.getString(
-                                                context?.getString(R.string.text_to_speech_accent_key),
-                                                ""
-                                            ).toString(),
-                                            sharedPref.getString(
-                                                context?.getString(R.string.text_to_speech_voice_name_key),
-                                                ""
-                                            ).toString(),
-                                            sharedPref.getString(
-                                                context?.getString(R.string.text_to_speech_gender_key),
-                                                ""
-                                            ).toString()
-                                        )
-                                    )
-                                )
-                            }
+                            val textToSpeechResponse = getTextToSpeechResponse(chatCompletionMessage.content)
 
                             val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
 
@@ -735,26 +662,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                 configureTranslator()
 
                                 try {
-                                    val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                        viewModel.getTextToSpeechResponse(
-                                            TextToSpeechRequestData(
-                                                Input(translationResponse.text), Voice(
-                                                    sharedPref.getString(
-                                                        context?.getString(R.string.text_to_speech_accent_key),
-                                                        ""
-                                                    ).toString(),
-                                                    sharedPref.getString(
-                                                        context?.getString(R.string.text_to_speech_voice_name_key),
-                                                        ""
-                                                    ).toString(),
-                                                    sharedPref.getString(
-                                                        context?.getString(R.string.text_to_speech_gender_key),
-                                                        ""
-                                                    ).toString()
-                                                )
-                                            )
-                                        )
-                                    }
+                                    val textToSpeechResponse = getTextToSpeechResponse(translationResponse.text)
 
                                     val dataDecoded =
                                         decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -818,26 +726,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                 configureTranslator()
 
                                 try {
-                                    val textToSpeechResponse = withContext(Dispatchers.IO) {
-                                        viewModel.getTextToSpeechResponse(
-                                            TextToSpeechRequestData(
-                                                Input(translationResponse.text), Voice(
-                                                    sharedPref.getString(
-                                                        context?.getString(R.string.text_to_speech_accent_key),
-                                                        ""
-                                                    ).toString(),
-                                                    sharedPref.getString(
-                                                        context?.getString(R.string.text_to_speech_voice_name_key),
-                                                        ""
-                                                    ).toString(),
-                                                    sharedPref.getString(
-                                                        context?.getString(R.string.text_to_speech_gender_key),
-                                                        ""
-                                                    ).toString()
-                                                )
-                                            )
-                                        )
-                                    }
+                                    val textToSpeechResponse = getTextToSpeechResponse(translationResponse.text)
 
                                     val dataDecoded =
                                         decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -965,6 +854,24 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     }
 
+    suspend fun getTextToSpeechResponse(text: String,
+                                        languageCode: String = sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key),"").toString(),
+                                        name: String = sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
+                                        ssmlGender: String = sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
+    ): TextToSpeechResponse {
+        return withContext(Dispatchers.IO) {
+            viewModel.getTextToSpeechResponse(
+                TextToSpeechRequestData(
+                    Input(text), Voice(
+                        languageCode,
+                        name,
+                        ssmlGender
+                    )
+                )
+            )
+        }
+    }
+
     private fun createRecorder() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             recorder = MediaRecorder(requireContext())
@@ -1066,8 +973,8 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun writeDataToFile(data: ByteArray, file: File) {
-        val fos = FileOutputStream(file)
+    private fun writeDataToFile(data: ByteArray, file: File, append: Boolean = false) {
+        val fos = FileOutputStream(file, append)
         fos.write(data)
         fos.close()
     }
