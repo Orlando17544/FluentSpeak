@@ -312,7 +312,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 viewModel.cleanUnfinishedMessage()
 
-                disableButtons(binding)
+                //disableButtons(binding)
 
                 val updateButtons = {
                     binding.recordButton.setEnabled(true)
