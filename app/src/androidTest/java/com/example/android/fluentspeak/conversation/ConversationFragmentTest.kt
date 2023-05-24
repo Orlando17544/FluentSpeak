@@ -36,7 +36,7 @@ class ConversationFragmentTest {
 
     @After
     fun cleanupConversationData() {
-        ConversationData.cleanMessages()
+        //ConversationData.cleanMessages()
     }
 
     @Test
