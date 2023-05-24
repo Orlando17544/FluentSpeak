@@ -371,18 +371,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     }
 
                     lifecycleScope.launch {
-                        val transcriptionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTranscriptionResponse(
-                                TranscriptionRequestData(
-                                    file = recordingCacheFile,
-                                    prompt = viewModel.unfinishedMessage.content,
-                                    temperature = sharedPref.getFloat(
-                                        context?.getString(R.string.whisper_temperature_key),
-                                        0.0f
-                                    )
-                                )
-                            )
-                        }
+                        val transcriptionResponse = getTranscriptionResponse()
 
                         configureRecorder()
 
@@ -438,18 +427,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     }
 
                     lifecycleScope.launch {
-                        val transcriptionResponse = withContext(Dispatchers.IO) {
-                            viewModel.getTranscriptionResponse(
-                                TranscriptionRequestData(
-                                    file = recordingCacheFile,
-                                    prompt = viewModel.unfinishedMessage.content,
-                                    temperature = sharedPref.getFloat(
-                                        context?.getString(R.string.whisper_temperature_key),
-                                        0.0f
-                                    )
-                                )
-                            )
-                        }
+                        val transcriptionResponse = getTranscriptionResponse()
 
                         configureRecorder()
 
@@ -866,6 +844,21 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         languageCode,
                         name,
                         ssmlGender
+                    )
+                )
+            )
+        }
+    }
+
+    suspend fun getTranscriptionResponse(): TranscriptionResponse {
+        return withContext(Dispatchers.IO) {
+            viewModel.getTranscriptionResponse(
+                TranscriptionRequestData(
+                    file = recordingCacheFile,
+                    prompt = viewModel.unfinishedMessage.content,
+                    temperature = sharedPref.getFloat(
+                        context?.getString(R.string.whisper_temperature_key),
+                        0.0f
                     )
                 )
             )
