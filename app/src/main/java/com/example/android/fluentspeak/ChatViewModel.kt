@@ -30,6 +30,14 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
     private val _previousConversation = MutableLiveData<Int>(0)
     val previousConversation: LiveData<Int> = _previousConversation
 
+    private var _currentRecordingState = RECORDING_STATE.STOP
+    val currentRecordingState: RECORDING_STATE
+        get() = _currentRecordingState
+
+    private var _currentTranslatingState = TRANSLATING_STATE.STOP
+    val currentTranslatingState: TRANSLATING_STATE
+        get() = _currentTranslatingState
+
     fun setConversations(conversations: List<ConversationWithUtterances>) {
         _conversations.value = conversations
     }
@@ -60,6 +68,14 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
 
     fun cleanMessages() {
         _messages.clear()
+    }
+
+    fun setCurrentRecordingState(newState: RECORDING_STATE) {
+        _currentRecordingState = newState
+    }
+
+    fun setCurrentTranslatingState(newState: TRANSLATING_STATE) {
+        _currentTranslatingState = newState
     }
 
     suspend fun getTranscriptionResponse(transcriptionRequestData: TranscriptionRequestData): TranscriptionResponse {

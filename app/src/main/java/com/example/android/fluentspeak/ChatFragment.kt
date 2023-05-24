@@ -32,13 +32,11 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.w3c.dom.Text
 import retrofit2.HttpException
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Locale
-import java.util.concurrent.TimeoutException
 
 
 enum class RECORDING_STATE {
@@ -61,9 +59,6 @@ val MESSAGES_TO_CHATGPT =
     UTTERANCES_PER_CONVERSATION + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
 
 class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
-
-    private var currentRecordingState = RECORDING_STATE.STOP
-    private var currentTranslatingState = TRANSLATING_STATE.STOP
 
     private var recorder: MediaRecorder? = null
     private var translator: MediaRecorder? = null
@@ -224,7 +219,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         updateButtons()
                     }
                 }
-                currentRecordingState = RECORDING_STATE.STOP
+                viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
             }
         })
 
@@ -346,7 +341,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         updateButtons()
                     }
                 }
-                currentRecordingState = RECORDING_STATE.STOP
+                viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
             }
         })
 
@@ -356,7 +351,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
     fun setupListeners(binding: FragmentChatBinding) {
         binding.recordButton.setOnClickListener {
 
-            when (currentRecordingState) {
+            when (viewModel.currentRecordingState) {
                 RECORDING_STATE.START -> {
                     stopRecordingRecorder()
 
@@ -386,7 +381,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         updateButtons()
                     }
-                    currentRecordingState = RECORDING_STATE.PAUSE
+                    viewModel.setCurrentRecordingState(RECORDING_STATE.PAUSE)
                 }
 
                 RECORDING_STATE.STOP -> {
@@ -396,7 +391,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     binding.recordButton.setEnabled(true)
                     binding.stopButton.setEnabled(true)
                     binding.translateButton.setEnabled(false)
-                    currentRecordingState = RECORDING_STATE.START
+                    viewModel.setCurrentRecordingState(RECORDING_STATE.START)
                 }
 
                 RECORDING_STATE.PAUSE -> {
@@ -406,13 +401,13 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     binding.recordButton.setEnabled(true)
                     binding.stopButton.setEnabled(true)
                     binding.translateButton.setEnabled(false)
-                    currentRecordingState = RECORDING_STATE.START
+                    viewModel.setCurrentRecordingState(RECORDING_STATE.START)
                 }
             }
         }
 
         binding.stopButton.setOnClickListener {
-            when (currentRecordingState) {
+            when (viewModel.currentRecordingState) {
                 RECORDING_STATE.START -> {
                     stopRecordingRecorder()
 
@@ -483,7 +478,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             updateButtons()
                         }
                     }
-                    currentRecordingState = RECORDING_STATE.STOP
+                    viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
                 }
 
                 RECORDING_STATE.STOP -> return@setOnClickListener
@@ -537,26 +532,25 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                             startPlayer()
                             resetUntilFinishedPlaying(updateButtons)
-                        } catch (e: Exception) {
-                            // HttpException
+                        } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
                             textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
                             updateButtons()
                         }
                     }
-                    currentRecordingState = RECORDING_STATE.STOP
+                    viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
                 }
             }
         }
 
         binding.translateButton.setOnClickListener {
-            when (currentRecordingState) {
+            when (viewModel.currentRecordingState) {
                 RECORDING_STATE.START -> {
                     return@setOnClickListener
                 }
 
                 RECORDING_STATE.STOP -> {
-                    when (currentTranslatingState) {
+                    when (viewModel.currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
                             translator?.start()
                             (binding.translateButton).icon =
@@ -564,7 +558,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             binding.recordButton.setEnabled(false)
                             binding.stopButton.setEnabled(false)
                             binding.translateButton.setEnabled(true)
-                            currentTranslatingState = TRANSLATING_STATE.START
+                            viewModel.setCurrentTranslatingState(TRANSLATING_STATE.START)
                         }
 
                         TRANSLATING_STATE.START -> {
@@ -597,20 +591,19 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                                     startPlayer()
                                     resetUntilFinishedPlaying(updateButtons)
-                                } catch (e: Exception) {
-                                    // HttpException
+                                } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
                                     textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
                                     updateButtons()
                                 }
                             }
-                            currentTranslatingState = TRANSLATING_STATE.STOP
+                            viewModel.setCurrentTranslatingState(TRANSLATING_STATE.STOP)
                         }
                     }
                 }
 
                 RECORDING_STATE.PAUSE -> {
-                    when (currentTranslatingState) {
+                    when (viewModel.currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
                             translator?.start()
                             (binding.translateButton).icon =
@@ -618,7 +611,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             binding.recordButton.setEnabled(false)
                             binding.stopButton.setEnabled(false)
                             binding.translateButton.setEnabled(true)
-                            currentTranslatingState = TRANSLATING_STATE.START
+                            viewModel.setCurrentTranslatingState(TRANSLATING_STATE.START)
                         }
 
                         TRANSLATING_STATE.START -> {
@@ -651,14 +644,13 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                                     startPlayer()
                                     resetUntilFinishedPlaying(updateButtons)
-                                } catch (e: Exception) {
-                                    // HttpException
+                                } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
                                     textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
                                     updateButtons()
                                 }
                             }
-                            currentTranslatingState = TRANSLATING_STATE.STOP
+                            viewModel.setCurrentTranslatingState(TRANSLATING_STATE.STOP)
                         }
                     }
                 }
