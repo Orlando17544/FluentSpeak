@@ -212,8 +212,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         startPlayer()
                         resetUntilFinishedPlaying(updateButtons)
-                    } catch (e: Exception) {
-                        // HttpException
+                    } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
                         textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
                         updateButtons()
@@ -334,8 +333,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         startPlayer()
                         resetUntilFinishedPlaying(updateButtons)
-                    } catch (e: Exception) {
-                        // HttpException
+                    } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
                         textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
                         updateButtons()
@@ -471,8 +469,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                             startPlayer()
                             resetUntilFinishedPlaying(updateButtons)
-                        } catch (e: Exception) {
-                            // HttpException
+                        } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
                             textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
                             updateButtons()
