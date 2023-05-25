@@ -202,6 +202,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 lifecycleScope.launch {
 
                     try {
+                        //textToSpeech()
                         val textToSpeechResponse = getTextToSpeechResponse(conversationTitleFormatted + starterUtterance.text)
 
                         val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
@@ -215,6 +216,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
                         textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                        updateButtons()
+                    } catch (e: IOException) {
+                        Log.e("ChatFragment: ", e.toString())
                         updateButtons()
                     }
                 }
@@ -336,6 +340,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
                         textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                        updateButtons()
+                    } catch (e: IOException) {
+                        Log.e("ChatFragment: ", e.toString())
                         updateButtons()
                     }
                 }
@@ -473,6 +480,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             Log.e("ChatFragment: ", e.toString())
                             textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
                             updateButtons()
+                        } catch (e: IOException) {
+                            Log.e("ChatFragment: ", e.toString())
+                            updateButtons()
                         }
                     }
                     viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
@@ -533,6 +543,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             Log.e("ChatFragment: ", e.toString())
                             textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
                             updateButtons()
+                        } catch (e: IOException) {
+                            Log.e("ChatFragment: ", e.toString())
+                            updateButtons()
                         }
                     }
                     viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
@@ -592,6 +605,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                     Log.e("ChatFragment: ", e.toString())
                                     textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
                                     updateButtons()
+                                } catch (e: IOException) {
+                                    Log.e("ChatFragment: ", e.toString())
+                                    updateButtons()
                                 }
                             }
                             viewModel.setCurrentTranslatingState(TRANSLATING_STATE.STOP)
@@ -644,6 +660,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                 } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
                                     textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                                    updateButtons()
+                                } catch (e: IOException) {
+                                    Log.e("ChatFragment: ", e.toString())
                                     updateButtons()
                                 }
                             }
@@ -893,25 +912,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
     }
 
     internal fun configurePlayer() {
-        try {
-            mediaPlayer?.apply {
-                setDataSource(syntheticCacheFile.absolutePath)
-                prepare()
-            }
-        } catch (ioException: IOException) {
-            val silence =
-                "//NExAARMI4wAEmMTOXAOCYbb/uP3uyYDCwAAAAAAAAAAAAgLJkyZMmnYOAgCAIAgD7xOgkD97vLlwfB8HzmUKOIZfIf/IdZ8uHuwIn7/y/wQTAUQcDAIkVQGiiAiQEB//NExA4QgN5IADDGcFUFDBbeRzk3bXKrkVkM6beFGFWGjIqUAiBK24SQmKpr3sj/ZMR5u9QmQhLUO0IYtM1Xe6kr4jnSPGkfVChlVf2219q0QUbsJrSY4KfFYZ+jT69e//NExB8SQIo0AHjETZt/+32vob37Kt/6m6zeFLP5y325zrH0S2fi60IKxny/9WNyf1bH9/vrpQBQL1mOgeRATYRhIcdh/PdixR6ybj8rtkWbqKZ5J08m0T6JI+gXeuso//NExCkQgDIsAHpGAMG1ANY1zw2oAAakcNALFSCULe8qToGstWgX7QyqBUGILO0cTpIbMjvR2IHlxdYuTcC9j6qDda0oC1IwolTEHiQSceMR6SrJkF2GgG0IjyZXaPDT//NExDoSIDYsAMJSBI4JgKEJ9JggNEw6+17ppQMjR9jQ5ClgiMkuYPUalHpY+ufa5KlDYnuoMKAb2nH0qGvGlNqnLEEWUB2SB9dYfQQNDpAwOScnDBsPpUmxQGoLCr+p//NExEQQ8D4wAErMBAw0Sq9l3VNZvG1ty1WeuT5e0s26U1L/+7NdFl20WyWVf9bWrTKrvR3RohNYfiebKhNwBeD7+Fvym92dD9Xnfhze7utFApoxouTF/iWMy789ds0j//NExFMRAdYsAHhEmT0BPvb+6NRF9i7Wc03vszNKr0Qn1X36JvVexL16Mz3kuQE8HpgKCxEDMJJY2Zxr3k3Biw2QmBPNdSoVwSp57J5aVnjrd/eH+eicX+naRT/NW4LJ//NExGISCfYoAHiEmO7NnZjuIerlu1qSZfuTdkJHBFj9Dy4eOdDPPYz05HcIn0xGNiPVl9yPn/dj/t3/Jerl53i+0/81BWA0HzermRGMkhAQhNk72CaewACNxaV3NEQk//NExGwUKXIkAHjElULdziC2gDMPzHwBCQyOfAPQMh7w/xHmZh/q6cPeH+7p/b4O4YH+jeAOHuD2gDgh3f3////7rdf8voEcQIk11olGTY4iUfQkkmxHRkfQIgsTTIQy//NExG4VMLo8AHmGTUqQpFLKwqJnqilFqopZpETNLIkWqoUOLIWaRImrQodVQocDAQpwwEKoCArAISTAQqhQFaFAVgYUYUMKNVXZijMaqsVVjMahWNVXYUcDATUKAlAE//NExGwhGmYwAGJGuQSgYUdCjYoqEUCjpuCoQ3EXFFZHQhsU0YplagqjjAIEFDAwQcAFjq1llkssqOQkMFBAwQcDW/+wgaqIGIiVVVdNP7CStMMQ//7VVVEXJVVVf/+h//NExDoRgK08ABjGTStNIlb//lVV9IqqqkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
-
-            val dataDecoded = decodeBase64ToByteArray(silence)
-
-            writeDataToFile(dataDecoded, syntheticCacheFile)
-
-            mediaPlayer = MediaPlayer()
-
-            mediaPlayer?.apply {
-                setDataSource(syntheticCacheFile.absolutePath)
-                prepare()
-            }
+        mediaPlayer?.apply {
+            setDataSource(syntheticCacheFile.absolutePath)
+            prepare()
         }
     }
 
