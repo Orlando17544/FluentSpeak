@@ -200,22 +200,23 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 }
 
                 lifecycleScope.launch {
-
                     try {
-                        //textToSpeech()
-                        val textToSpeechResponse = getTextToSpeechResponse(conversationTitleFormatted + starterUtterance.text)
-
-                        val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                        writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                        configurePlayer()
-
-                        startPlayer()
-                        resetUntilFinishedPlaying(updateButtons)
+                        textToSpeech(
+                            listOf(
+                                Pair(
+                                    Input(conversationTitleFormatted + starterUtterance.text),
+                                    Voice()
+                                )
+                            ), updateButtons = updateButtons
+                        )
                     } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
-                        textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                        textToSpeech?.speak(
+                            conversationTitleFormatted + starterUtterance.text,
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            ""
+                        )
                         updateButtons()
                     } catch (e: IOException) {
                         Log.e("ChatFragment: ", e.toString())
@@ -325,21 +326,22 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 lifecycleScope.launch {
                     try {
-                        val textToSpeechResponse = getTextToSpeechResponse(conversationTitleFormatted + starterUtterance.text)
-
-                        val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-                        //val dataDecoded2 = decodeBase64ToByteArray(textToSpeechResponse2.audioContent)
-
-                        writeDataToFile(dataDecoded, syntheticCacheFile)
-                        //writeDataToFile(dataDecoded2, syntheticCacheFile, true)
-
-                        configurePlayer()
-
-                        startPlayer()
-                        resetUntilFinishedPlaying(updateButtons)
+                        textToSpeech(
+                            listOf(
+                                Pair(
+                                    Input(conversationTitleFormatted + starterUtterance.text),
+                                    Voice()
+                                )
+                            ), updateButtons = updateButtons
+                        )
                     } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
-                        textToSpeech?.speak(conversationTitleFormatted + starterUtterance.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                        textToSpeech?.speak(
+                            conversationTitleFormatted + starterUtterance.text,
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            ""
+                        )
                         updateButtons()
                     } catch (e: IOException) {
                         Log.e("ChatFragment: ", e.toString())
@@ -466,19 +468,22 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         addMessageToView(chatCompletionMessage)
 
                         try {
-                            val textToSpeechResponse = getTextToSpeechResponse(chatCompletionMessage.content)
-
-                            val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                            writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                            configurePlayer()
-
-                            startPlayer()
-                            resetUntilFinishedPlaying(updateButtons)
+                            textToSpeech(
+                                listOf(
+                                    Pair(
+                                        Input(chatCompletionMessage.content),
+                                        Voice()
+                                    )
+                                ), updateButtons = updateButtons
+                            )
                         } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
-                            textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
+                            textToSpeech?.speak(
+                                chatCompletionMessage.content,
+                                TextToSpeech.QUEUE_FLUSH,
+                                null,
+                                ""
+                            )
                             updateButtons()
                         } catch (e: IOException) {
                             Log.e("ChatFragment: ", e.toString())
@@ -529,19 +534,22 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         addMessageToView(chatCompletionMessage)
 
                         try {
-                            val textToSpeechResponse = getTextToSpeechResponse(chatCompletionMessage.content)
-
-                            val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                            writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                            configurePlayer()
-
-                            startPlayer()
-                            resetUntilFinishedPlaying(updateButtons)
+                            textToSpeech(
+                                listOf(
+                                    Pair(
+                                        Input(chatCompletionMessage.content),
+                                        Voice()
+                                    )
+                                ), updateButtons = updateButtons
+                            )
                         } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
-                            textToSpeech?.speak(chatCompletionMessage.content, TextToSpeech.QUEUE_FLUSH, null, "")
+                            textToSpeech?.speak(
+                                chatCompletionMessage.content,
+                                TextToSpeech.QUEUE_FLUSH,
+                                null,
+                                ""
+                            )
                             updateButtons()
                         } catch (e: IOException) {
                             Log.e("ChatFragment: ", e.toString())
@@ -590,20 +598,22 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                 configureTranslator()
 
                                 try {
-                                    val textToSpeechResponse = getTextToSpeechResponse(translationResponse.text)
-
-                                    val dataDecoded =
-                                        decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                                    writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                                    configurePlayer()
-
-                                    startPlayer()
-                                    resetUntilFinishedPlaying(updateButtons)
+                                    textToSpeech(
+                                        listOf(
+                                            Pair(
+                                                Input(translationResponse.text),
+                                                Voice()
+                                            )
+                                        ), updateButtons = updateButtons
+                                    )
                                 } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
-                                    textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                                    textToSpeech?.speak(
+                                        translationResponse.text,
+                                        TextToSpeech.QUEUE_FLUSH,
+                                        null,
+                                        ""
+                                    )
                                     updateButtons()
                                 } catch (e: IOException) {
                                     Log.e("ChatFragment: ", e.toString())
@@ -646,20 +656,22 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                 configureTranslator()
 
                                 try {
-                                    val textToSpeechResponse = getTextToSpeechResponse(translationResponse.text)
-
-                                    val dataDecoded =
-                                        decodeBase64ToByteArray(textToSpeechResponse.audioContent)
-
-                                    writeDataToFile(dataDecoded, syntheticCacheFile)
-
-                                    configurePlayer()
-
-                                    startPlayer()
-                                    resetUntilFinishedPlaying(updateButtons)
+                                    textToSpeech(
+                                        listOf(
+                                            Pair(
+                                                Input(translationResponse.text),
+                                                Voice()
+                                            )
+                                        ), updateButtons = updateButtons
+                                    )
                                 } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
-                                    textToSpeech?.speak(translationResponse.text, TextToSpeech.QUEUE_FLUSH, null, "")
+                                    textToSpeech?.speak(
+                                        translationResponse.text,
+                                        TextToSpeech.QUEUE_FLUSH,
+                                        null,
+                                        ""
+                                    )
                                     updateButtons()
                                 } catch (e: IOException) {
                                     Log.e("ChatFragment: ", e.toString())
@@ -802,21 +814,19 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         }
     }
 
-    suspend fun getTextToSpeechResponse(text: String,
-                                        languageCode: String = sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key),"").toString(),
-                                        name: String = sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "").toString(),
-                                        ssmlGender: String = sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "").toString()
+    suspend fun getTextToSpeechResponse(
+        input: Input,
+        voice: Voice = Voice(
+            sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "")
+                .toString(),
+            sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "")
+                .toString(),
+            sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "")
+                .toString()
+        )
     ): TextToSpeechResponse {
         return withContext(Dispatchers.IO) {
-            viewModel.getTextToSpeechResponse(
-                TextToSpeechRequestData(
-                    Input(text), Voice(
-                        languageCode,
-                        name,
-                        ssmlGender
-                    )
-                )
-            )
+            viewModel.getTextToSpeechResponse(TextToSpeechRequestData(input, voice))
         }
     }
 
@@ -847,6 +857,35 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 )
             )
         }
+    }
+
+    suspend private fun textToSpeech(
+        list: List<Pair<Input, Voice>>,
+        updateButtons: () -> Unit = {}
+    ) {
+        for (i in list.indices) {
+            var textToSpeechResponse: TextToSpeechResponse
+
+            if (list[i].second.equals(Voice())) {
+                textToSpeechResponse = getTextToSpeechResponse(list[i].first)
+            } else {
+                textToSpeechResponse = getTextToSpeechResponse(list[i].first, list[i].second)
+            }
+
+            val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
+
+            if (i == 0) {
+                writeDataToFile(dataDecoded, syntheticCacheFile)
+            } else {
+                writeDataToFile(dataDecoded, syntheticCacheFile, true)
+            }
+        }
+
+        configurePlayer()
+
+        startPlayer()
+
+        resetUntilFinishedPlaying(updateButtons)
     }
 
     private fun createRecorder() {
@@ -1018,7 +1057,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             R.id.settingsFragment -> {
                 val navController = requireActivity().findNavController(R.id.nav_host_fragment)
 
-                return item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
+                return item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(
+                    item
+                )
             }
 
             R.id.item_change_conversation -> {
@@ -1035,7 +1076,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             val result = textToSpeech?.setLanguage(Locale.US)
 
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e("TTS","The Language not supported!")
+                Log.e("TTS", "The Language not supported!")
             }
         }
     }
