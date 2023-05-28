@@ -191,12 +191,6 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
 
         textToSpeechResponse =
             apisRepository.googleCloudApi.getTextToSpeechResponse(textToSpeechRequestData)
-        /*try {
-
-        } catch (e: TimeoutException) {
-            //result.postValue(Message("exception", "Failure: ${e.message}"))
-            e.message?.let { Log.e("SPEECH_RESPONSE_ERROR", it) }
-        }*/
 
         return textToSpeechResponse ?: TextToSpeechResponse("")
     }

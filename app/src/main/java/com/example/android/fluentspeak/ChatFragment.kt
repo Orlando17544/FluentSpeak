@@ -202,11 +202,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 lifecycleScope.launch {
                     try {
                         textToSpeech(
-                            listOf(
-                                Pair(
-                                    Input(conversationTitleFormatted + starterUtterance.text),
-                                    Voice()
-                                )
+                            Pair(
+                                Input(conversationTitleFormatted + starterUtterance.text),
+                                null
                             ), updateButtons = updateButtons
                         )
                     } catch (e: HttpException) {
@@ -327,11 +325,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 lifecycleScope.launch {
                     try {
                         textToSpeech(
-                            listOf(
-                                Pair(
-                                    Input(conversationTitleFormatted + starterUtterance.text),
-                                    Voice()
-                                )
+                            Pair(
+                                Input(conversationTitleFormatted + starterUtterance.text),
+                                null
                             ), updateButtons = updateButtons
                         )
                     } catch (e: HttpException) {
@@ -469,11 +465,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         try {
                             textToSpeech(
-                                listOf(
-                                    Pair(
-                                        Input(chatCompletionMessage.content),
-                                        Voice()
-                                    )
+                                Pair(
+                                    Input(chatCompletionMessage.content),
+                                    null
                                 ), updateButtons = updateButtons
                             )
                         } catch (e: HttpException) {
@@ -535,11 +529,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         try {
                             textToSpeech(
-                                listOf(
-                                    Pair(
-                                        Input(chatCompletionMessage.content),
-                                        Voice()
-                                    )
+                                Pair(
+                                    Input(chatCompletionMessage.content),
+                                    null
                                 ), updateButtons = updateButtons
                             )
                         } catch (e: HttpException) {
@@ -599,11 +591,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                                 try {
                                     textToSpeech(
-                                        listOf(
-                                            Pair(
-                                                Input(translationResponse.text),
-                                                Voice()
-                                            )
+                                        Pair(
+                                            Input(translationResponse.text),
+                                            null
                                         ), updateButtons = updateButtons
                                     )
                                 } catch (e: HttpException) {
@@ -657,11 +647,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                                 try {
                                     textToSpeech(
-                                        listOf(
-                                            Pair(
-                                                Input(translationResponse.text),
-                                                Voice()
-                                            )
+                                        Pair(
+                                            Input(translationResponse.text),
+                                            null
                                         ), updateButtons = updateButtons
                                     )
                                 } catch (e: HttpException) {
@@ -860,16 +848,16 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
     }
 
     suspend private fun textToSpeech(
-        list: List<Pair<Input, Voice>>,
+        vararg array: Pair<Input, Voice?>,
         updateButtons: () -> Unit = {}
     ) {
-        for (i in list.indices) {
+        for (i in array.indices) {
             var textToSpeechResponse: TextToSpeechResponse
 
-            if (list[i].second.equals(Voice())) {
-                textToSpeechResponse = getTextToSpeechResponse(list[i].first)
+            if (array[i].second == null) {
+                textToSpeechResponse = getTextToSpeechResponse(array[i].first)
             } else {
-                textToSpeechResponse = getTextToSpeechResponse(list[i].first, list[i].second)
+                textToSpeechResponse = getTextToSpeechResponse(array[i].first, array[i].second!!)
             }
 
             val dataDecoded = decodeBase64ToByteArray(textToSpeechResponse.audioContent)
