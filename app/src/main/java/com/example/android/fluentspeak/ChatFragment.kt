@@ -369,13 +369,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     }
 
                     lifecycleScope.launch {
-                        val transcriptionResponse = getTranscriptionResponse()
-
-                        configureRecorder()
+                        val text = speechToText()
 
                         val userMessagePortion = Message(
                             MESSAGE_ROLE.USER.toString().lowercase(),
-                            transcriptionResponse.text.trim()
+                            text.trim()
                         )
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
@@ -425,13 +423,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     }
 
                     lifecycleScope.launch {
-                        val transcriptionResponse = getTranscriptionResponse()
-
-                        configureRecorder()
+                        val text = speechToText()
 
                         val userMessagePortion = Message(
                             MESSAGE_ROLE.USER.toString().lowercase(),
-                            transcriptionResponse.text.trim()
+                            text.trim()
                         )
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
@@ -874,6 +870,14 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         startPlayer()
 
         resetUntilFinishedPlaying(updateButtons)
+    }
+
+    suspend private fun speechToText(): String {
+        val transcriptionResponse = getTranscriptionResponse()
+
+        configureRecorder()
+
+        return transcriptionResponse.text
     }
 
     private fun createRecorder() {
