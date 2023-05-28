@@ -581,21 +581,19 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             }
 
                             lifecycleScope.launch {
-                                val translationResponse = getTranslationResponse()
-
-                                configureTranslator()
+                                val text = speechToEnglishText()
 
                                 try {
                                     textToSpeech(
                                         Pair(
-                                            Input(translationResponse.text),
+                                            Input(text),
                                             null
                                         ), updateButtons = updateButtons
                                     )
                                 } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
                                     textToSpeech?.speak(
-                                        translationResponse.text,
+                                        text,
                                         TextToSpeech.QUEUE_FLUSH,
                                         null,
                                         ""
@@ -637,21 +635,19 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             }
 
                             lifecycleScope.launch {
-                                val translationResponse = getTranslationResponse()
-
-                                configureTranslator()
+                                val text = speechToEnglishText()
 
                                 try {
                                     textToSpeech(
                                         Pair(
-                                            Input(translationResponse.text),
+                                            Input(text),
                                             null
                                         ), updateButtons = updateButtons
                                     )
                                 } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
                                     textToSpeech?.speak(
-                                        translationResponse.text,
+                                        text,
                                         TextToSpeech.QUEUE_FLUSH,
                                         null,
                                         ""
@@ -878,6 +874,14 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         configureRecorder()
 
         return transcriptionResponse.text
+    }
+
+    suspend private fun speechToEnglishText(): String {
+        val translationResponse = getTranslationResponse()
+
+        configureTranslator()
+
+        return translationResponse.text
     }
 
     private fun createRecorder() {
