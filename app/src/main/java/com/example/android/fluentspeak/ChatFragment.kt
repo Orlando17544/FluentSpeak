@@ -112,7 +112,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 binding?.chatLayout?.removeAllViews()
                 viewModel.cleanMessages()
 
-                addMessageToView(viewModel.systemMessage)
+                addMessagesToView(viewModel.systemMessage)
 
                 val currentConversation = it
 
@@ -136,13 +136,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 val starterUtteranceFormatted =
                     starterUtterance.speaker + " said: " + starterUtterance.text
 
-                addMessageToView(
+                addMessagesToView(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                addMessageToView(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtterance.text
@@ -224,7 +222,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 binding?.chatLayout?.removeAllViews()
 
-                addMessageToView(viewModel.systemMessage)
+                addMessagesToView(viewModel.systemMessage)
 
                 val currentConversation = viewModel.currentConversation.value ?: 0
 
@@ -245,13 +243,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 val starterUtteranceFormatted =
                     starterUtterance.speaker + " said: " + starterUtterance.text
 
-                addMessageToView(
+                addMessagesToView(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                addMessageToView(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtterance.text
@@ -346,7 +342,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
-                        addMessageToView(userMessagePortion)
+                        addMessagesToView(userMessagePortion)
 
                         updateButtons(true, true, true, recordIcon = "play")
                     }
@@ -384,7 +380,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
-                        addMessageToView(userMessagePortion)
+                        addMessagesToView(userMessagePortion)
 
                         val userMessageFormatted =
                             "Orlando" + " said: " + viewModel.unfinishedMessage.content
@@ -409,7 +405,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         viewModel.addMessage(chatCompletionMessage)
 
-                        addMessageToView(chatCompletionMessage)
+                        addMessagesToView(chatCompletionMessage)
 
                         try {
                             textToSpeech(
@@ -467,7 +463,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         viewModel.addMessage(chatCompletionMessage)
 
-                        addMessageToView(chatCompletionMessage)
+                        addMessagesToView(chatCompletionMessage)
 
                         try {
                             textToSpeech(
@@ -943,62 +939,65 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         }
     }
 
-    internal fun addMessageToView(message: Message): Int {
-        if (message.content == "") {
-            return 0
+    internal fun addMessagesToView(vararg messages: Message): Int {
+        for (message in messages) {
+            if (message.content == "") {
+                continue
+            }
+
+            val messageView = TextView(context)
+
+            messageView.text = message.content
+            messageView.textSize = 16f
+            messageView.setPadding(16, 16, 16, 16)
+
+            val layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+
+            layoutParams.setMargins(16, 16, 16, 16)
+
+            val screenWidth = Resources.getSystem().displayMetrics.widthPixels
+
+            when (message.role) {
+                MESSAGE_ROLE.SYSTEM.toString().lowercase() -> {
+                    layoutParams.gravity = Gravity.CENTER_HORIZONTAL
+                    messageView.background = ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.round_corner_textview_system
+                    )
+                    messageView.setTextColor(Color.WHITE)
+                }
+
+                MESSAGE_ROLE.ASSISTANT.toString().lowercase() -> {
+                    layoutParams.gravity = Gravity.START
+                    messageView.maxWidth = (screenWidth * 0.6).toInt()
+                    messageView.background = ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.round_corner_textview_assistant
+                    )
+                }
+
+                MESSAGE_ROLE.USER.toString().lowercase() -> {
+                    layoutParams.gravity = Gravity.END
+                    messageView.maxWidth = (screenWidth * 0.6).toInt()
+                    messageView.background = ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.round_corner_textview_user
+                    )
+                }
+            }
+
+            messageView.layoutParams = layoutParams
+
+            binding?.chatLayout?.addView(messageView)
+            /*
+            messageView.id = (1000..9000).random()
+
+            return messageView.id*/
         }
-
-        val messageView = TextView(context)
-
-        messageView.text = message.content
-        messageView.textSize = 16f
-        messageView.setPadding(16, 16, 16, 16)
-
-        val layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-
-        layoutParams.setMargins(16, 16, 16, 16)
-
-        val screenWidth = Resources.getSystem().displayMetrics.widthPixels
-
-        when (message.role) {
-            MESSAGE_ROLE.SYSTEM.toString().lowercase() -> {
-                layoutParams.gravity = Gravity.CENTER_HORIZONTAL
-                messageView.background = ContextCompat.getDrawable(
-                    requireContext(),
-                    R.drawable.round_corner_textview_system
-                )
-                messageView.setTextColor(Color.WHITE)
-            }
-
-            MESSAGE_ROLE.ASSISTANT.toString().lowercase() -> {
-                layoutParams.gravity = Gravity.START
-                messageView.maxWidth = (screenWidth * 0.6).toInt()
-                messageView.background = ContextCompat.getDrawable(
-                    requireContext(),
-                    R.drawable.round_corner_textview_assistant
-                )
-            }
-
-            MESSAGE_ROLE.USER.toString().lowercase() -> {
-                layoutParams.gravity = Gravity.END
-                messageView.maxWidth = (screenWidth * 0.6).toInt()
-                messageView.background = ContextCompat.getDrawable(
-                    requireContext(),
-                    R.drawable.round_corner_textview_user
-                )
-            }
-        }
-
-        messageView.layoutParams = layoutParams
-
-        binding?.chatLayout?.addView(messageView)
-
-        messageView.id = (1000..9000).random()
-
-        return messageView.id
+        return TODO("Provide the return value")
     }
 
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {
