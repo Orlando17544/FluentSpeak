@@ -147,13 +147,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     )
                 )
 
-                viewModel.addMessage(
+                viewModel.addMessages(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                viewModel.addMessage(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtteranceFormatted
@@ -176,7 +174,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
-                    viewModel.addMessage(
+                    viewModel.addMessages(
                         Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             utteranceFormatted
@@ -256,13 +254,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 viewModel.cleanMessages()
 
-                viewModel.addMessage(
+                viewModel.addMessages(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                viewModel.addMessage(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtteranceFormatted
@@ -284,7 +280,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
-                    viewModel.addMessage(
+                    viewModel.addMessages(
                         Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             utteranceFormatted
@@ -385,7 +381,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         val userMessageFormatted =
                             "Orlando" + " said: " + viewModel.unfinishedMessage.content
 
-                        viewModel.addMessage(
+                        viewModel.addMessages(
                             Message(
                                 MESSAGE_ROLE.USER.toString().lowercase(),
                                 userMessageFormatted
@@ -403,7 +399,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessage(chatCompletionMessage)
+                        viewModel.addMessages(chatCompletionMessage)
 
                         addMessagesToView(chatCompletionMessage)
 
@@ -440,7 +436,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     val userMessageFormatted =
                         "Orlando" + " said: " + viewModel.unfinishedMessage.content
 
-                    viewModel.addMessage(
+                    viewModel.addMessages(
                         Message(
                             MESSAGE_ROLE.USER.toString().lowercase(),
                             userMessageFormatted
@@ -461,7 +457,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessage(chatCompletionMessage)
+                        viewModel.addMessages(chatCompletionMessage)
 
                         addMessagesToView(chatCompletionMessage)
 
