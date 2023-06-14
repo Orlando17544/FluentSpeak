@@ -17,3 +17,5 @@ ApiKeys.kt
 Functions.kt
 /firebase
 /Functions
+/database/fluent
+/database/datasets
