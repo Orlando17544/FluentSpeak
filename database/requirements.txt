@@ -1,0 +1,5 @@
+Jupyter==1.0.0
+db-sqlite3==0.0.1
+pandas==1.5.2
+SQLAlchemy==1.4.45
+convokit
