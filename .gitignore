@@ -15,7 +15,6 @@
 local.properties
 ApiKeys.kt
 Functions.kt
-/firebase
-/Functions
-/database/fluent
-/database/datasets
+/Functions/
+/database/fluent/
+/database/datasets/*/
