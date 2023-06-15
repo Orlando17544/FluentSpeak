@@ -59,11 +59,13 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
         _unfinishedMessage.content = ""
     }
 
-    fun addMessage(message: Message) {
-        if (message.content == "") {
-            return
+    fun addMessages(vararg messages: Message) {
+        for (message in messages) {
+            if (message.content == "") {
+                continue
+            }
+            _messages.add(message)
         }
-        _messages.add(message)
     }
 
     fun cleanMessages() {

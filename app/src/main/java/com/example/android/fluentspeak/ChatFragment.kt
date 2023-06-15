@@ -16,6 +16,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -71,7 +72,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private var textToSpeech: TextToSpeech? = null
 
-    private var chatLayout: LinearLayout? = null
+    private var binding: FragmentChatBinding? = null
 
     lateinit var sharedPref: SharedPreferences
 
@@ -86,7 +87,12 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val binding = FragmentChatBinding.inflate(inflater)
+        binding = DataBindingUtil.inflate(
+            inflater,
+            R.layout.fragment_chat,
+            container,
+            false
+        )
 
         // TextToSpeech(Context: this, OnInitListener: this)
         textToSpeech = TextToSpeech(requireContext(), this)
@@ -96,19 +102,17 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             Context.MODE_PRIVATE
         )!!
 
-        chatLayout = binding.chatLayout
-
-        setupListeners(binding)
+        setupListeners()
 
         viewModel.currentConversation.observe(viewLifecycleOwner, Observer {
             if (viewModel.previousConversation.value != it) {
 
                 viewModel.updatePreviousConversation()
 
-                chatLayout?.removeAllViews()
+                binding?.chatLayout?.removeAllViews()
                 viewModel.cleanMessages()
 
-                addMessageToView(viewModel.systemMessage)
+                addMessagesToView(viewModel.systemMessage)
 
                 val currentConversation = it
 
@@ -132,26 +136,22 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 val starterUtteranceFormatted =
                     starterUtterance.speaker + " said: " + starterUtterance.text
 
-                addMessageToView(
+                addMessagesToView(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                addMessageToView(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtterance.text
                     )
                 )
 
-                viewModel.addMessage(
+                viewModel.addMessages(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                viewModel.addMessage(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtteranceFormatted
@@ -174,14 +174,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
-                    /*addMessageToView(
-                        Message(
-                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            utteranceFormatted
-                        )
-                    )*/
-
-                    viewModel.addMessage(
+                    viewModel.addMessages(
                         Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             utteranceFormatted
@@ -191,13 +184,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 viewModel.cleanUnfinishedMessage()
 
-                disableButtons(binding)
-
-                val updateButtons = {
-                    binding.recordButton.setEnabled(true)
-                    binding.stopButton.setEnabled(false)
-                    binding.translateButton.setEnabled(true)
-                }
+                disableButtons()
 
                 lifecycleScope.launch {
                     try {
@@ -205,7 +192,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             Pair(
                                 Input(conversationTitleFormatted + starterUtterance.text),
                                 null
-                            ), updateButtons = updateButtons
+                            ), updateButtons = { updateButtons(true, false, true) }
                         )
                     } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
@@ -215,10 +202,10 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             null,
                             ""
                         )
-                        updateButtons()
+                        updateButtons(true, false, true)
                     } catch (e: IOException) {
                         Log.e("ChatFragment: ", e.toString())
-                        updateButtons()
+                        updateButtons(true, false, true)
                     }
                 }
                 viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
@@ -231,9 +218,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             if (viewModel.conversations.value != it) {
                 viewModel.setConversations(it)
 
-                chatLayout?.removeAllViews()
+                binding?.chatLayout?.removeAllViews()
 
-                addMessageToView(viewModel.systemMessage)
+                addMessagesToView(viewModel.systemMessage)
 
                 val currentConversation = viewModel.currentConversation.value ?: 0
 
@@ -254,13 +241,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 val starterUtteranceFormatted =
                     starterUtterance.speaker + " said: " + starterUtterance.text
 
-                addMessageToView(
+                addMessagesToView(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                addMessageToView(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtterance.text
@@ -269,13 +254,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 viewModel.cleanMessages()
 
-                viewModel.addMessage(
+                viewModel.addMessages(
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         conversationTitleFormatted
-                    )
-                )
-                viewModel.addMessage(
+                    ),
                     Message(
                         MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                         starterUtteranceFormatted
@@ -297,14 +280,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 for (utterance in utterances) {
                     val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
-                    /*addMessageToView(
-                        Message(
-                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            utteranceFormatted
-                        )
-                    )*/
-
-                    viewModel.addMessage(
+                    viewModel.addMessages(
                         Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                             utteranceFormatted
@@ -314,21 +290,13 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 viewModel.cleanUnfinishedMessage()
 
-                //disableButtons(binding)
-
-                val updateButtons = {
-                    binding.recordButton.setEnabled(true)
-                    binding.stopButton.setEnabled(false)
-                    binding.translateButton.setEnabled(true)
-                }
-
                 lifecycleScope.launch {
                     try {
                         textToSpeech(
                             Pair(
                                 Input(conversationTitleFormatted + starterUtterance.text),
                                 null
-                            ), updateButtons = updateButtons
+                            ), updateButtons = { updateButtons(true, false, true) }
                         )
                     } catch (e: HttpException) {
                         Log.e("ChatFragment: ", e.toString())
@@ -338,35 +306,27 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             null,
                             ""
                         )
-                        updateButtons()
+                        updateButtons(true, false, true)
                     } catch (e: IOException) {
                         Log.e("ChatFragment: ", e.toString())
-                        updateButtons()
+                        updateButtons(true, false, true)
                     }
                 }
                 viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
             }
         })
 
-        return binding.root
+        return binding?.root
     }
 
-    fun setupListeners(binding: FragmentChatBinding) {
-        binding.recordButton.setOnClickListener {
+    fun setupListeners() {
+        binding?.recordButton?.setOnClickListener {
 
             when (viewModel.currentRecordingState) {
                 RECORDING_STATE.START -> {
                     stopRecordingRecorder()
 
-                    disableButtons(binding)
-
-                    val updateButtons = {
-                        (it as MaterialButton).icon =
-                            resources.getDrawable(R.drawable.baseline_play_arrow_24, null)
-                        binding.recordButton.setEnabled(true)
-                        binding.stopButton.setEnabled(true)
-                        binding.translateButton.setEnabled(true)
-                    }
+                    disableButtons()
 
                     lifecycleScope.launch {
                         val text = speechToText()
@@ -378,49 +338,33 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
-                        addMessageToView(userMessagePortion)
+                        addMessagesToView(userMessagePortion)
 
-                        updateButtons()
+                        updateButtons(true, true, true, recordIcon = "play")
                     }
                     viewModel.setCurrentRecordingState(RECORDING_STATE.PAUSE)
                 }
 
                 RECORDING_STATE.STOP -> {
                     recorder?.start()
-                    (it as MaterialButton).icon =
-                        resources.getDrawable(R.drawable.baseline_pause_24, null)
-                    binding.recordButton.setEnabled(true)
-                    binding.stopButton.setEnabled(true)
-                    binding.translateButton.setEnabled(false)
+                    updateButtons(true, true, false, recordIcon = "pause")
                     viewModel.setCurrentRecordingState(RECORDING_STATE.START)
                 }
 
                 RECORDING_STATE.PAUSE -> {
                     recorder?.start()
-                    (it as MaterialButton).icon =
-                        resources.getDrawable(R.drawable.baseline_pause_24, null)
-                    binding.recordButton.setEnabled(true)
-                    binding.stopButton.setEnabled(true)
-                    binding.translateButton.setEnabled(false)
+                    updateButtons(true, true, false, recordIcon = "pause")
                     viewModel.setCurrentRecordingState(RECORDING_STATE.START)
                 }
             }
         }
 
-        binding.stopButton.setOnClickListener {
+        binding?.stopButton?.setOnClickListener {
             when (viewModel.currentRecordingState) {
                 RECORDING_STATE.START -> {
                     stopRecordingRecorder()
 
-                    disableButtons(binding)
-
-                    val updateButtons = {
-                        (binding.recordButton).icon =
-                            resources.getDrawable(R.drawable.baseline_mic_24, null)
-                        binding.recordButton.setEnabled(true)
-                        binding.stopButton.setEnabled(false)
-                        binding.translateButton.setEnabled(true)
-                    }
+                    disableButtons()
 
                     lifecycleScope.launch {
                         val text = speechToText()
@@ -432,12 +376,12 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         viewModel.addMessageToUnfinishedMessage(userMessagePortion)
 
-                        addMessageToView(userMessagePortion)
+                        addMessagesToView(userMessagePortion)
 
                         val userMessageFormatted =
                             "Orlando" + " said: " + viewModel.unfinishedMessage.content
 
-                        viewModel.addMessage(
+                        viewModel.addMessages(
                             Message(
                                 MESSAGE_ROLE.USER.toString().lowercase(),
                                 userMessageFormatted
@@ -455,16 +399,16 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessage(chatCompletionMessage)
+                        viewModel.addMessages(chatCompletionMessage)
 
-                        addMessageToView(chatCompletionMessage)
+                        addMessagesToView(chatCompletionMessage)
 
                         try {
                             textToSpeech(
                                 Pair(
                                     Input(chatCompletionMessage.content),
                                     null
-                                ), updateButtons = updateButtons
+                                ), updateButtons = { updateButtons(true, false, true, recordIcon = "mic") }
                             )
                         } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
@@ -474,10 +418,10 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                 null,
                                 ""
                             )
-                            updateButtons()
+                            updateButtons(true, false, true, recordIcon = "mic")
                         } catch (e: IOException) {
                             Log.e("ChatFragment: ", e.toString())
-                            updateButtons()
+                            updateButtons(true, false, true, recordIcon = "mic")
                         }
                     }
                     viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
@@ -492,7 +436,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     val userMessageFormatted =
                         "Orlando" + " said: " + viewModel.unfinishedMessage.content
 
-                    viewModel.addMessage(
+                    viewModel.addMessages(
                         Message(
                             MESSAGE_ROLE.USER.toString().lowercase(),
                             userMessageFormatted
@@ -503,13 +447,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
                     val messages = listOf(viewModel.systemMessage) + lastMessages
 
-                    disableButtons(binding)
-
-                    val updateButtons = {
-                        binding.recordButton.setEnabled(true)
-                        binding.stopButton.setEnabled(false)
-                        binding.translateButton.setEnabled(true)
-                    }
+                    disableButtons()
 
                     lifecycleScope.launch {
                         val chatCompletionResponse = getChatCompletionResponse(messages)
@@ -519,16 +457,16 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                             chatCompletionResponse.choices[0].message.content
                         )
 
-                        viewModel.addMessage(chatCompletionMessage)
+                        viewModel.addMessages(chatCompletionMessage)
 
-                        addMessageToView(chatCompletionMessage)
+                        addMessagesToView(chatCompletionMessage)
 
                         try {
                             textToSpeech(
                                 Pair(
                                     Input(chatCompletionMessage.content),
                                     null
-                                ), updateButtons = updateButtons
+                                ), updateButtons = { updateButtons(true, false, true) }
                             )
                         } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
@@ -538,10 +476,10 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                 null,
                                 ""
                             )
-                            updateButtons()
+                            updateButtons(true, false, true)
                         } catch (e: IOException) {
                             Log.e("ChatFragment: ", e.toString())
-                            updateButtons()
+                            updateButtons(true, false, true)
                         }
                     }
                     viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
@@ -549,7 +487,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             }
         }
 
-        binding.translateButton.setOnClickListener {
+        binding?.translateButton?.setOnClickListener {
             when (viewModel.currentRecordingState) {
                 RECORDING_STATE.START -> {
                     return@setOnClickListener
@@ -559,26 +497,14 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     when (viewModel.currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
                             translator?.start()
-                            (binding.translateButton).icon =
-                                resources.getDrawable(R.drawable.baseline_stop_24, null)
-                            binding.recordButton.setEnabled(false)
-                            binding.stopButton.setEnabled(false)
-                            binding.translateButton.setEnabled(true)
+                            updateButtons(false, false, true, translateIcon = "stop")
                             viewModel.setCurrentTranslatingState(TRANSLATING_STATE.START)
                         }
 
                         TRANSLATING_STATE.START -> {
                             stopRecordingTranslator()
 
-                            disableButtons(binding)
-
-                            val updateButtons = {
-                                (binding.translateButton).icon =
-                                    resources.getDrawable(R.drawable.baseline_translate_24, null)
-                                binding.recordButton.setEnabled(true)
-                                binding.stopButton.setEnabled(false)
-                                binding.translateButton.setEnabled(true)
-                            }
+                            disableButtons()
 
                             lifecycleScope.launch {
                                 val text = speechToEnglishText()
@@ -588,7 +514,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                         Pair(
                                             Input(text),
                                             null
-                                        ), updateButtons = updateButtons
+                                        ), updateButtons = { updateButtons(true, false, true, translateIcon = "translate") }
                                     )
                                 } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
@@ -598,10 +524,10 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                         null,
                                         ""
                                     )
-                                    updateButtons()
+                                    updateButtons(true, false, true, translateIcon = "translate")
                                 } catch (e: IOException) {
                                     Log.e("ChatFragment: ", e.toString())
-                                    updateButtons()
+                                    updateButtons(true, false, true, translateIcon = "translate")
                                 }
                             }
                             viewModel.setCurrentTranslatingState(TRANSLATING_STATE.STOP)
@@ -613,26 +539,14 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     when (viewModel.currentTranslatingState) {
                         TRANSLATING_STATE.STOP -> {
                             translator?.start()
-                            (binding.translateButton).icon =
-                                resources.getDrawable(R.drawable.baseline_stop_24, null)
-                            binding.recordButton.setEnabled(false)
-                            binding.stopButton.setEnabled(false)
-                            binding.translateButton.setEnabled(true)
+                            updateButtons(false, false, true, translateIcon = "stop")
                             viewModel.setCurrentTranslatingState(TRANSLATING_STATE.START)
                         }
 
                         TRANSLATING_STATE.START -> {
                             stopRecordingTranslator()
 
-                            disableButtons(binding)
-
-                            val updateButtons = {
-                                (binding.translateButton).icon =
-                                    resources.getDrawable(R.drawable.baseline_translate_24, null)
-                                binding.recordButton.setEnabled(true)
-                                binding.stopButton.setEnabled(true)
-                                binding.translateButton.setEnabled(true)
-                            }
+                            disableButtons()
 
                             lifecycleScope.launch {
                                 val text = speechToEnglishText()
@@ -642,7 +556,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                         Pair(
                                             Input(text),
                                             null
-                                        ), updateButtons = updateButtons
+                                        ), updateButtons = { updateButtons(true, true, true, translateIcon = "translate") }
                                     )
                                 } catch (e: HttpException) {
                                     Log.e("ChatFragment: ", e.toString())
@@ -652,10 +566,10 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                                         null,
                                         ""
                                     )
-                                    updateButtons()
+                                    updateButtons(true, true, true, translateIcon = "translate")
                                 } catch (e: IOException) {
                                     Log.e("ChatFragment: ", e.toString())
-                                    updateButtons()
+                                    updateButtons(true, true, true, translateIcon = "translate")
                                 }
                             }
                             viewModel.setCurrentTranslatingState(TRANSLATING_STATE.STOP)
@@ -760,8 +674,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     override fun onDestroyView() {
         super.onDestroyView()
-
-        chatLayout = null
+        binding = null
 
         textToSpeech?.stop()
         textToSpeech?.shutdown()
@@ -841,7 +754,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     suspend private fun textToSpeech(
         vararg array: Pair<Input, Voice?>,
-        updateButtons: () -> Unit = {}
+        updateButtons: () -> Unit
     ) {
         for (i in array.indices) {
             var textToSpeechResponse: TextToSpeechResponse
@@ -975,68 +888,112 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         fos.close()
     }
 
-    private fun disableButtons(binding: FragmentChatBinding) {
-        binding.recordButton.setEnabled(false)
-        binding.stopButton.setEnabled(false)
-        binding.translateButton.setEnabled(false)
+    private fun disableButtons() {
+        binding?.recordButton?.setEnabled(false)
+        binding?.stopButton?.setEnabled(false)
+        binding?.translateButton?.setEnabled(false)
     }
 
-    internal fun addMessageToView(message: Message): Int {
-        if (message.content == "") {
-            return 0
-        }
-
-        val messageView = TextView(context)
-
-        messageView.text = message.content
-        messageView.textSize = 16f
-        messageView.setPadding(16, 16, 16, 16)
-
-        val layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+    private fun updateButtons(
+        recordEnabled: Boolean,
+        stopEnabled: Boolean,
+        translateEnabled: Boolean,
+        recordIcon: String = "",
+        translateIcon: String = ""
+    ) {
+        val list = listOf(
+            Pair(binding?.recordButton, recordEnabled),
+            Pair(binding?.stopButton, stopEnabled),
+            Pair(binding?.translateButton, translateEnabled)
         )
 
-        layoutParams.setMargins(16, 16, 16, 16)
-
-        val screenWidth = Resources.getSystem().displayMetrics.widthPixels
-
-        when (message.role) {
-            MESSAGE_ROLE.SYSTEM.toString().lowercase() -> {
-                layoutParams.gravity = Gravity.CENTER_HORIZONTAL
-                messageView.background = ContextCompat.getDrawable(
-                    requireContext(),
-                    R.drawable.round_corner_textview_system
-                )
-                messageView.setTextColor(Color.WHITE)
-            }
-
-            MESSAGE_ROLE.ASSISTANT.toString().lowercase() -> {
-                layoutParams.gravity = Gravity.START
-                messageView.maxWidth = (screenWidth * 0.6).toInt()
-                messageView.background = ContextCompat.getDrawable(
-                    requireContext(),
-                    R.drawable.round_corner_textview_assistant
-                )
-            }
-
-            MESSAGE_ROLE.USER.toString().lowercase() -> {
-                layoutParams.gravity = Gravity.END
-                messageView.maxWidth = (screenWidth * 0.6).toInt()
-                messageView.background = ContextCompat.getDrawable(
-                    requireContext(),
-                    R.drawable.round_corner_textview_user
-                )
+        for (element in list) {
+            if (element.second) {
+                element.first?.setEnabled(true)
+            } else {
+                element.first?.setEnabled(false)
             }
         }
 
-        messageView.layoutParams = layoutParams
+        when (recordIcon) {
+            "mic" ->
+                (binding?.recordButton as MaterialButton)?.icon =
+                    resources.getDrawable(R.drawable.baseline_mic_24, null)
+            "play" ->
+                (binding?.recordButton as MaterialButton).icon =
+                    resources.getDrawable(R.drawable.baseline_play_arrow_24, null)
+            "pause" ->
+                (binding?.recordButton as MaterialButton).icon =
+                    resources.getDrawable(R.drawable.baseline_pause_24, null)
+        }
 
-        chatLayout?.addView(messageView)
+        when (translateIcon) {
+            "translate" -> (binding?.translateButton as MaterialButton).icon =
+                resources.getDrawable(R.drawable.baseline_translate_24, null)
+            "stop" -> (binding?.translateButton as MaterialButton).icon =
+                resources.getDrawable(R.drawable.baseline_stop_24, null)
+        }
+    }
 
-        messageView.id = (1000..9000).random()
+    internal fun addMessagesToView(vararg messages: Message): Int {
+        for (message in messages) {
+            if (message.content == "") {
+                continue
+            }
 
-        return messageView.id
+            val messageView = TextView(context)
+
+            messageView.text = message.content
+            messageView.textSize = 16f
+            messageView.setPadding(16, 16, 16, 16)
+
+            val layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+
+            layoutParams.setMargins(16, 16, 16, 16)
+
+            val screenWidth = Resources.getSystem().displayMetrics.widthPixels
+
+            when (message.role) {
+                MESSAGE_ROLE.SYSTEM.toString().lowercase() -> {
+                    layoutParams.gravity = Gravity.CENTER_HORIZONTAL
+                    messageView.background = ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.round_corner_textview_system
+                    )
+                    messageView.setTextColor(Color.WHITE)
+                }
+
+                MESSAGE_ROLE.ASSISTANT.toString().lowercase() -> {
+                    layoutParams.gravity = Gravity.START
+                    messageView.maxWidth = (screenWidth * 0.6).toInt()
+                    messageView.background = ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.round_corner_textview_assistant
+                    )
+                }
+
+                MESSAGE_ROLE.USER.toString().lowercase() -> {
+                    layoutParams.gravity = Gravity.END
+                    messageView.maxWidth = (screenWidth * 0.6).toInt()
+                    messageView.background = ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.round_corner_textview_user
+                    )
+                }
+            }
+
+            messageView.layoutParams = layoutParams
+
+            binding?.chatLayout?.addView(messageView)
+            /*
+            messageView.id = (1000..9000).random()
+
+            return messageView.id*/
+        }
+        return TODO("Provide the return value")
     }
 
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {
