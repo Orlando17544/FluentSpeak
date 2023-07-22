@@ -105,214 +105,18 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         setupListeners()
 
         viewModel.currentConversation.observe(viewLifecycleOwner, Observer {
+            // If user changed another conversation
             if (viewModel.previousConversation.value != it) {
-
                 viewModel.updatePreviousConversation()
-
-                binding?.chatLayout?.removeAllViews()
-                viewModel.cleanMessages()
-
-                addMessagesToView(viewModel.systemMessage)
-
-                val currentConversation = it
-
-                val conversations =
-                    viewModel.conversations.value ?: listOf<ConversationWithUtterances>()
-
-                // Add title and starter utterance
-
-                val conversation = conversations[currentConversation].conversation
-
-                lateinit var starterUtterance: Utterance
-                for (utterance in conversations[currentConversation].utterances) {
-                    if (utterance.replyTo == null) {
-                        starterUtterance = utterance
-                        break
-                    }
-                }
-
-                val conversationTitleFormatted =
-                    starterUtterance.speaker + " said: " + conversation.title
-                val starterUtteranceFormatted =
-                    starterUtterance.speaker + " said: " + starterUtterance.text
-
-                addMessagesToView(
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        conversationTitleFormatted
-                    ),
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        starterUtterance.text
-                    )
-                )
-
-                viewModel.addMessages(
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        conversationTitleFormatted
-                    ),
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        starterUtteranceFormatted
-                    )
-                )
-
-                // Add utterances
-
-
-                var utterances = mutableListOf<Utterance>()
-                for (utterance in conversations[currentConversation].utterances) {
-                    if (utterance.replyTo != null) {
-                        utterances.add(utterance)
-                    }
-                }
-
-                utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
-                    .toMutableList()
-
-                for (utterance in utterances) {
-                    val utteranceFormatted = utterance.speaker + " said: " + utterance.text
-
-                    viewModel.addMessages(
-                        Message(
-                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            utteranceFormatted
-                        )
-                    )
-                }
-
-                viewModel.cleanUnfinishedMessage()
-
-                disableButtons()
-
-                lifecycleScope.launch {
-                    try {
-                        textToSpeech(
-                            Pair(
-                                Input(conversationTitleFormatted + starterUtterance.text),
-                                null
-                            ), updateButtons = { updateButtons(true, false, true) }
-                        )
-                    } catch (e: HttpException) {
-                        Log.e("ChatFragment: ", e.toString())
-                        textToSpeech?.speak(
-                            conversationTitleFormatted + starterUtterance.text,
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            ""
-                        )
-                        updateButtons(true, false, true)
-                    } catch (e: IOException) {
-                        Log.e("ChatFragment: ", e.toString())
-                        updateButtons(true, false, true)
-                    }
-                }
-                viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
+                changeSubredditOrConversation()
             }
         })
 
         sharedViewModel.conversations.observe(viewLifecycleOwner, Observer {
-
             // If user selected another subreddit
             if (viewModel.conversations.value != it) {
                 viewModel.setConversations(it)
-
-                binding?.chatLayout?.removeAllViews()
-
-                addMessagesToView(viewModel.systemMessage)
-
-                val currentConversation = viewModel.currentConversation.value ?: 0
-
-                // Add title and starter utterance
-
-                val conversation = it[currentConversation].conversation
-
-                lateinit var starterUtterance: Utterance
-                for (utterance in it[currentConversation].utterances) {
-                    if (utterance.replyTo == null) {
-                        starterUtterance = utterance
-                        break
-                    }
-                }
-
-                val conversationTitleFormatted =
-                    starterUtterance.speaker + " said: " + conversation.title
-                val starterUtteranceFormatted =
-                    starterUtterance.speaker + " said: " + starterUtterance.text
-
-                addMessagesToView(
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        conversationTitleFormatted
-                    ),
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        starterUtterance.text
-                    )
-                )
-
-                viewModel.cleanMessages()
-
-                viewModel.addMessages(
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        conversationTitleFormatted
-                    ),
-                    Message(
-                        MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                        starterUtteranceFormatted
-                    )
-                )
-
-                // Add utterances
-
-                var utterances = mutableListOf<Utterance>()
-                for (utterance in it[currentConversation].utterances) {
-                    if (utterance.replyTo != null) {
-                        utterances.add(utterance)
-                    }
-                }
-
-                utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
-                    .toMutableList()
-
-                for (utterance in utterances) {
-                    val utteranceFormatted = utterance.speaker + " said: " + utterance.text
-
-                    viewModel.addMessages(
-                        Message(
-                            MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            utteranceFormatted
-                        )
-                    )
-                }
-
-                viewModel.cleanUnfinishedMessage()
-
-                lifecycleScope.launch {
-                    try {
-                        textToSpeech(
-                            Pair(
-                                Input(conversationTitleFormatted + starterUtterance.text),
-                                null
-                            ), updateButtons = { updateButtons(true, false, true) }
-                        )
-                    } catch (e: HttpException) {
-                        Log.e("ChatFragment: ", e.toString())
-                        textToSpeech?.speak(
-                            conversationTitleFormatted + starterUtterance.text,
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            ""
-                        )
-                        updateButtons(true, false, true)
-                    } catch (e: IOException) {
-                        Log.e("ChatFragment: ", e.toString())
-                        updateButtons(true, false, true)
-                    }
-                }
-                viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
+                changeSubredditOrConversation()
             }
         })
 
@@ -997,6 +801,109 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {
         return android.util.Base64.decode(encodedBase64, android.util.Base64.DEFAULT)
+    }
+
+    private fun changeSubredditOrConversation() {
+        binding?.chatLayout?.removeAllViews()
+        viewModel.cleanMessages()
+
+        addMessagesToView(viewModel.systemMessage)
+
+        val currentConversation = viewModel.currentConversation.value ?: 0
+
+        val conversations =
+            viewModel.conversations.value ?: listOf<ConversationWithUtterances>()
+
+        // Add title and starter utterance
+
+        val conversation = conversations[currentConversation].conversation
+
+        lateinit var starterUtterance: Utterance
+        for (utterance in conversations[currentConversation].utterances) {
+            if (utterance.replyTo == null) {
+                starterUtterance = utterance
+                break
+            }
+        }
+
+        val conversationTitleFormatted =
+            starterUtterance.speaker + " said: " + conversation.title
+        val starterUtteranceFormatted =
+            starterUtterance.speaker + " said: " + starterUtterance.text
+
+        addMessagesToView(
+            Message(
+                MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                conversationTitleFormatted
+            ),
+            Message(
+                MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                starterUtterance.text
+            )
+        )
+
+        viewModel.addMessages(
+            Message(
+                MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                conversationTitleFormatted
+            ),
+            Message(
+                MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                starterUtteranceFormatted
+            )
+        )
+
+        // Add utterances
+
+
+        var utterances = mutableListOf<Utterance>()
+        for (utterance in conversations[currentConversation].utterances) {
+            if (utterance.replyTo != null) {
+                utterances.add(utterance)
+            }
+        }
+
+        utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
+            .toMutableList()
+
+        for (utterance in utterances) {
+            val utteranceFormatted = utterance.speaker + " said: " + utterance.text
+
+            viewModel.addMessages(
+                Message(
+                    MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                    utteranceFormatted
+                )
+            )
+        }
+
+        viewModel.cleanUnfinishedMessage()
+
+        disableButtons()
+
+        lifecycleScope.launch {
+            try {
+                textToSpeech(
+                    Pair(
+                        Input(conversationTitleFormatted + starterUtterance.text),
+                        null
+                    ), updateButtons = { updateButtons(true, false, true) }
+                )
+            } catch (e: HttpException) {
+                Log.e("ChatFragment: ", e.toString())
+                textToSpeech?.speak(
+                    conversationTitleFormatted + starterUtterance.text,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    ""
+                )
+                updateButtons(true, false, true)
+            } catch (e: IOException) {
+                Log.e("ChatFragment: ", e.toString())
+                updateButtons(true, false, true)
+            }
+        }
+        viewModel.setCurrentRecordingState(RECORDING_STATE.STOP)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
