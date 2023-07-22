@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
@@ -52,14 +53,21 @@ class TopicsFragment : Fragment() {
                 this, viewModelFactory
             ).get(TopicsViewModel::class.java)
 
-        val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
-            requireContext(),
-            R.layout.item,
-            resources.getStringArray(R.array.topics)
-        )
+        /*
+        viewModel.getSubreddits().observe(viewLifecycleOwner, Observer {
 
-        topicsAutoCompleteTextView = binding.topicsField.editText as AutoCompleteTextView
-        topicsAutoCompleteTextView?.setAdapter(adapter)
+        })*/
+
+        viewModel.subreddits.observe(viewLifecycleOwner, Observer {
+            val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
+                requireContext(),
+                R.layout.item,
+                it.toTypedArray()//resources.getStringArray(R.array.topics)
+            )
+
+            topicsAutoCompleteTextView = binding.topicsField.editText as AutoCompleteTextView
+            topicsAutoCompleteTextView?.setAdapter(adapter)
+        })
 
         binding.startButton.setOnClickListener {
             lifecycleScope.launch {

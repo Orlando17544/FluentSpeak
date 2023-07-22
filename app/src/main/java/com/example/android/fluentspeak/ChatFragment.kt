@@ -936,6 +936,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
     }
 
     internal fun addMessagesToView(vararg messages: Message): Int {
+
         for (message in messages) {
             if (message.content == "") {
                 continue
@@ -988,12 +989,10 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             messageView.layoutParams = layoutParams
 
             binding?.chatLayout?.addView(messageView)
-            /*
-            messageView.id = (1000..9000).random()
-
-            return messageView.id*/
         }
-        return TODO("Provide the return value")
+        val id = (1000..9000).random()
+
+        return id
     }
 
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {

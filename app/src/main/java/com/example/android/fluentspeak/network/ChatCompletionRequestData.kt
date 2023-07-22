@@ -13,7 +13,7 @@ data class ChatCompletionRequestData(
     val topP: Float = 1f,
     val n: Int = 1,
     val stream: Boolean = false,
-    val stop: String? = null,
+    val stop: String? = "said:",
 
     @Json(name = "max_tokens")
     val maxTokens: Int = 0,

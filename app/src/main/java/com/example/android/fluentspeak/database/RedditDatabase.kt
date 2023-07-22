@@ -7,7 +7,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 @Database(entities = [Conversation::class, Utterance::class], version = 1, exportSchema = false)
-@TypeConverters(Converters::class)
 abstract class RedditDatabase : RoomDatabase() {
 
     abstract val redditDatabaseDao: RedditDatabaseDao
