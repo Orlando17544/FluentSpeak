@@ -10,6 +10,7 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.text.Html
 import android.util.Log
 import android.view.*
 import android.widget.LinearLayout
@@ -741,6 +742,8 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     internal fun addMessagesToView(vararg messages: Message): Int {
 
+        var previousSpeaker = ""
+
         for (message in messages) {
             if (message.content == "") {
                 continue
@@ -748,7 +751,25 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
             val messageView = TextView(context)
 
-            messageView.text = message.content
+            if (message.role.equals(MESSAGE_ROLE.SYSTEM.toString().lowercase())) {
+                messageView.text = message.content
+            } else {
+                val regex1 = Regex("[A-Z][a-z]+(?= said: )")
+                val regex2 = Regex("(?<= said: )(.|\n)+")
+
+                val speaker = regex1.find(message.content)?.value
+                val post = regex2.find(message.content)?.value
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    if (previousSpeaker.equals(speaker)) {
+                        messageView.text = Html.fromHtml(post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
+                    } else {
+                        messageView.text = Html.fromHtml("<b><font color=\"green\">" + speaker + "</b></font><br>" + post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
+                    }
+                    previousSpeaker = speaker!!
+                }
+            }
+
             messageView.textSize = 16f
             messageView.setPadding(16, 16, 16, 16)
 
@@ -838,7 +859,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             ),
             Message(
                 MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                starterUtterance.text
+                starterUtteranceFormatted
             )
         )
 
@@ -877,7 +898,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
             addMessagesToView(
                 Message(
-                    MESSAGE_ROLE.SYSTEM.toString().lowercase(),
+                    MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
                     utteranceFormatted
                 )
             )
