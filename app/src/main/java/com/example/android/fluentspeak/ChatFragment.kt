@@ -49,7 +49,7 @@ enum class TRANSLATING_STATE {
 }
 
 enum class MESSAGE_ROLE {
-    SYSTEM, ASSISTANT, PROMPT,USER
+    SYSTEM, ASSISTANT, USER
 }
 
 val UTTERANCES_PER_CONVERSATION = 4
@@ -780,16 +780,6 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     )
                 }
 
-                MESSAGE_ROLE.PROMPT.toString().lowercase() -> {
-                    layoutParams.gravity = Gravity.START
-                    messageView.maxWidth = (screenWidth * 0.6).toInt()
-                    messageView.background = ContextCompat.getDrawable(
-                        requireContext(),
-                        R.drawable.round_corner_textview_prompt
-                    )
-                    messageView.setTextColor(Color.WHITE)
-                }
-
                 MESSAGE_ROLE.USER.toString().lowercase() -> {
                     layoutParams.gravity = Gravity.END
                     messageView.maxWidth = (screenWidth * 0.6).toInt()
@@ -865,7 +855,6 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
         // Add utterances
 
-
         var utterances = mutableListOf<Utterance>()
         for (utterance in conversations[currentConversation].utterances) {
             if (utterance.replyTo != null) {
@@ -888,7 +877,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
             addMessagesToView(
                 Message(
-                    MESSAGE_ROLE.PROMPT.toString().lowercase(),
+                    MESSAGE_ROLE.SYSTEM.toString().lowercase(),
                     utteranceFormatted
                 )
             )
