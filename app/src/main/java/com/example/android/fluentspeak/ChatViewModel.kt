@@ -38,6 +38,10 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
     val currentTranslatingState: TRANSLATING_STATE
         get() = _currentTranslatingState
 
+    private val _speakers: MutableList<Speaker> = mutableListOf<Speaker>()
+    val speakers: List<Speaker>
+        get() = _speakers
+
     fun setConversations(conversations: List<ConversationWithUtterances>) {
         _conversations.value = conversations
     }
@@ -78,6 +82,14 @@ class ChatViewModel(private val apisRepository: ApisRepository) : ViewModel() {
 
     fun setCurrentTranslatingState(newState: TRANSLATING_STATE) {
         _currentTranslatingState = newState
+    }
+
+    fun cleanSpeakers() {
+        _speakers.clear()
+    }
+
+    fun addSpeaker(speaker: Speaker) {
+        _speakers.add(speaker)
     }
 
     suspend fun getTranscriptionResponse(transcriptionRequestData: TranscriptionRequestData): TranscriptionResponse {

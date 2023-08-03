@@ -53,7 +53,7 @@ enum class MESSAGE_ROLE {
     SYSTEM, ASSISTANT, USER
 }
 
-val UTTERANCES_PER_CONVERSATION = 4
+val UTTERANCES_PER_CONVERSATION = 1
 val CONVERSATION_TITLE = 1
 val STARTER_UTTERANCE = 1
 val USER_RESPONSE = 1
@@ -760,11 +760,20 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 val speaker = regex1.find(message.content)?.value
                 val post = regex2.find(message.content)?.value
 
+                lateinit var textColor: String
+
+                for (speaker in viewModel.speakers) {
+                    if (speaker.name.equals(speaker)) {
+                        textColor = speaker.textColor
+                    }
+                }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     if (previousSpeaker.equals(speaker)) {
                         messageView.text = Html.fromHtml(post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
                     } else {
-                        messageView.text = Html.fromHtml("<b><font color=\"green\">" + speaker + "</b></font><br>" + post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
+
+                        messageView.text = Html.fromHtml("<b><font color=\"" + textColor + "\">" + speaker + "</b></font><br>" + post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
                     }
                     previousSpeaker = speaker!!
                 }
@@ -824,6 +833,81 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         return android.util.Base64.decode(encodedBase64, android.util.Base64.DEFAULT)
     }
 
+    private fun createSpeakers() {
+        // Delete previous speakers
+        viewModel.cleanSpeakers()
+
+        // Filter different voices from the voice in shared preferences for female and male
+
+        val femaleVoices = TextToSpeechSettingsData.VOICES.filter {
+            if (!it.equals(Voice(
+                    sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "")
+                        .toString(),
+                    sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "")
+                        .toString(),
+                    sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "")
+                        .toString()
+                ))) {
+                it.ssmlGender.equals("FEMALE")
+            } else {
+                false
+            }
+        }.toMutableList()
+
+        val maleVoices = TextToSpeechSettingsData.VOICES.filter {
+            if (!it.equals(Voice(
+                    sharedPref.getString(context?.getString(R.string.text_to_speech_accent_key), "")
+                        .toString(),
+                    sharedPref.getString(context?.getString(R.string.text_to_speech_voice_name_key), "")
+                        .toString(),
+                    sharedPref.getString(context?.getString(R.string.text_to_speech_gender_key), "")
+                        .toString()
+                ))) {
+                it.ssmlGender.equals("MALE")
+            } else {
+                false
+            }
+        }.toMutableList()
+
+        val textColors = mutableListOf<String>(getString(R.string.first_color), getString(R.string.second_color), getString(R.string.third_color), getString(R.string.fourth_color), getString(R.string.fifth_color))
+
+        val currentConversation = viewModel.currentConversation.value ?: 0
+
+        val conversations =
+            viewModel.conversations.value ?: listOf<ConversationWithUtterances>()
+
+        val speakers = mutableListOf<Pair<String, String>>()
+
+        for (utterance in conversations[currentConversation].utterances) {
+            speakers.add(Pair(utterance.speaker, utterance.gender))
+        }
+
+        val uniqueSpeakers = speakers.toSet()
+
+        for (uniqueSpeaker in uniqueSpeakers) {
+            val name = uniqueSpeaker.first
+            val gender = uniqueSpeaker.second
+            val textColor = textColors.asSequence().shuffled().take(1).toList()[0]
+
+            textColors.remove(textColor)
+
+            lateinit var voice: Voice
+            if (uniqueSpeaker.second.equals("MALE")) {
+                voice = maleVoices.asSequence().shuffled().take(1).toList()[0]
+
+                maleVoices.remove(voice)
+            } else {
+                voice = femaleVoices.asSequence().shuffled().take(1).toList()[0]
+
+                femaleVoices.remove(voice)
+            }
+
+            val speaker = Speaker(name, gender, textColor, voice)
+
+            viewModel.addSpeaker(speaker)
+        }
+    }
+
     private fun changeSubredditOrConversation() {
         binding?.chatLayout?.removeAllViews()
         viewModel.cleanMessages()
@@ -834,6 +918,8 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
         val conversations =
             viewModel.conversations.value ?: listOf<ConversationWithUtterances>()
+
+        createSpeakers()
 
         // Add title and starter utterance
 
