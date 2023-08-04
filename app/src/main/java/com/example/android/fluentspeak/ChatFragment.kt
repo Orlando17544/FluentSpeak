@@ -742,7 +742,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     internal fun addMessagesToView(vararg messages: Message): Int {
 
-        var previousSpeaker = ""
+        var previousSpeakerName = ""
 
         for (message in messages) {
             if (message.content == "") {
@@ -757,25 +757,24 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 val regex1 = Regex("[A-Z][a-z]+(?= said: )")
                 val regex2 = Regex("(?<= said: )(.|\n)+")
 
-                val speaker = regex1.find(message.content)?.value
+                val speakerName = regex1.find(message.content)?.value
                 val post = regex2.find(message.content)?.value
 
                 lateinit var textColor: String
 
                 for (speaker in viewModel.speakers) {
-                    if (speaker.name.equals(speaker)) {
+                    if (speaker.name.equals(speakerName)) {
                         textColor = speaker.textColor
                     }
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    if (previousSpeaker.equals(speaker)) {
+                    if (previousSpeakerName.equals(speakerName)) {
                         messageView.text = Html.fromHtml(post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
                     } else {
-
-                        messageView.text = Html.fromHtml("<b><font color=\"" + textColor + "\">" + speaker + "</b></font><br>" + post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
+                        messageView.text = Html.fromHtml("<b><font color=\"" + textColor + "\">" + speakerName + "</b></font><br>" + post, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
                     }
-                    previousSpeaker = speaker!!
+                    previousSpeakerName = speakerName!!
                 }
             }
 
@@ -833,7 +832,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         return android.util.Base64.decode(encodedBase64, android.util.Base64.DEFAULT)
     }
 
-    private fun createSpeakers() {
+    private fun createSpeakers(starterUtterance: Utterance, utterances: MutableList<Utterance>) {
         // Delete previous speakers
         viewModel.cleanSpeakers()
 
@@ -871,14 +870,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
         val textColors = mutableListOf<String>(getString(R.string.first_color), getString(R.string.second_color), getString(R.string.third_color), getString(R.string.fourth_color), getString(R.string.fifth_color))
 
-        val currentConversation = viewModel.currentConversation.value ?: 0
-
-        val conversations =
-            viewModel.conversations.value ?: listOf<ConversationWithUtterances>()
-
         val speakers = mutableListOf<Pair<String, String>>()
 
-        for (utterance in conversations[currentConversation].utterances) {
+        speakers.add(Pair(starterUtterance.speaker, starterUtterance.gender))
+
+        for (utterance in utterances) {
             speakers.add(Pair(utterance.speaker, utterance.gender))
         }
 
@@ -892,11 +888,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             textColors.remove(textColor)
 
             lateinit var voice: Voice
-            if (uniqueSpeaker.second.equals("MALE")) {
+            if (uniqueSpeaker.second.equals("male")) {
                 voice = maleVoices.asSequence().shuffled().take(1).toList()[0]
 
                 maleVoices.remove(voice)
-            } else {
+            } else if (uniqueSpeaker.second.equals("female")) {
                 voice = femaleVoices.asSequence().shuffled().take(1).toList()[0]
 
                 femaleVoices.remove(voice)
@@ -919,9 +915,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         val conversations =
             viewModel.conversations.value ?: listOf<ConversationWithUtterances>()
 
-        createSpeakers()
-
-        // Add title and starter utterance
+        // Extract starter utterance and utterances
 
         val conversation = conversations[currentConversation].conversation
 
@@ -932,6 +926,21 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 break
             }
         }
+
+        var utterances = mutableListOf<Utterance>()
+        for (utterance in conversations[currentConversation].utterances) {
+            if (utterance.replyTo != null) {
+                utterances.add(utterance)
+            }
+        }
+
+        utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
+            .toMutableList()
+
+        // Create speakers
+        createSpeakers(starterUtterance, utterances)
+
+        // Add title and starter utterance
 
         val conversationTitleFormatted =
             starterUtterance.speaker + " said: " + conversation.title
@@ -960,18 +969,17 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             )
         )
 
-        // Add utterances
+        var dialogues = arrayOf<Pair<Input, Voice?>>()
 
-        var utterances = mutableListOf<Utterance>()
-        for (utterance in conversations[currentConversation].utterances) {
-            if (utterance.replyTo != null) {
-                utterances.add(utterance)
+        dialogues += Pair(Input(starterUtterance.speaker + " said: "), null)
+
+        for (speaker in viewModel.speakers) {
+            if (starterUtterance.speaker.equals(speaker.name)) {
+                dialogues += Pair(Input(conversation.title + " " + starterUtterance.text), speaker.voice)
             }
         }
 
-        utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
-            .toMutableList()
-
+        // Add utterances
         for (utterance in utterances) {
             val utteranceFormatted = utterance.speaker + " said: " + utterance.text
 
@@ -988,6 +996,14 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     utteranceFormatted
                 )
             )
+
+            dialogues += Pair(Input(utterance.speaker + " said: "), null)
+
+            for (speaker in viewModel.speakers) {
+                if (utterance.speaker.equals(speaker.name)) {
+                    dialogues += Pair(Input(utterance.text), speaker.voice)
+                }
+            }
         }
 
         viewModel.cleanUnfinishedMessage()
@@ -997,10 +1013,8 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         lifecycleScope.launch {
             try {
                 textToSpeech(
-                    Pair(
-                        Input(conversationTitleFormatted + starterUtterance.text),
-                        null
-                    ), updateButtons = { updateButtons(true, false, true) }
+                    *dialogues,
+                    updateButtons = { updateButtons(true, false, true) }
                 )
             } catch (e: HttpException) {
                 Log.e("ChatFragment: ", e.toString())
