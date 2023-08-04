@@ -53,13 +53,6 @@ enum class MESSAGE_ROLE {
     SYSTEM, ASSISTANT, USER
 }
 
-val UTTERANCES_PER_CONVERSATION = 1
-val CONVERSATION_TITLE = 1
-val STARTER_UTTERANCE = 1
-val USER_RESPONSE = 1
-val MESSAGES_TO_CHATGPT =
-    UTTERANCES_PER_CONVERSATION + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
-
 class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private var recorder: MediaRecorder? = null
@@ -183,8 +176,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         addMessagesToView(userMessagePortion)
 
+                        val userName = sharedPref.getString(context?.getString(R.string.username_key), "")
+                            .toString()
+
                         val userMessageFormatted =
-                            "Orlando" + " said: " + viewModel.unfinishedMessage.content
+                            userName + " said: " + viewModel.unfinishedMessage.content
 
                         viewModel.addMessages(
                             Message(
@@ -194,7 +190,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         )
                         viewModel.cleanUnfinishedMessage()
 
-                        val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
+                        val lastMessages = viewModel.messages.takeLast(getMessagesToChatGPT())
                         val messages = listOf(viewModel.systemMessage) + lastMessages
 
                         val chatCompletionResponse = getChatCompletionResponse(messages)
@@ -238,8 +234,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                     configureRecorder()
 
+                    val userName = sharedPref.getString(context?.getString(R.string.username_key), "")
+                        .toString()
+
                     val userMessageFormatted =
-                        "Orlando" + " said: " + viewModel.unfinishedMessage.content
+                        userName + " said: " + viewModel.unfinishedMessage.content
 
                     viewModel.addMessages(
                         Message(
@@ -249,7 +248,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     )
                     viewModel.cleanUnfinishedMessage()
 
-                    val lastMessages = viewModel.messages.takeLast(MESSAGES_TO_CHATGPT)
+                    val lastMessages = viewModel.messages.takeLast(getMessagesToChatGPT())
                     val messages = listOf(viewModel.systemMessage) + lastMessages
 
                     disableButtons()
@@ -828,6 +827,21 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         return id
     }
 
+    private fun getMessagesToChatGPT(): Int {
+
+        val utterancesAtBeginning = sharedPref.getInt(
+            context?.getString(R.string.utterances_at_beginning_key),
+            0
+        )
+        val CONVERSATION_TITLE = 1
+        val STARTER_UTTERANCE = 1
+        val USER_RESPONSE = 1
+        val messagesToChatGPT =
+            utterancesAtBeginning + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
+
+        return messagesToChatGPT
+    }
+
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {
         return android.util.Base64.decode(encodedBase64, android.util.Base64.DEFAULT)
     }
@@ -934,7 +948,12 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             }
         }
 
-        utterances = utterances.asSequence().shuffled().take(UTTERANCES_PER_CONVERSATION)
+        val utterancesAtBeginning = sharedPref.getInt(
+            context?.getString(R.string.utterances_at_beginning_key),
+            0
+        )
+
+        utterances = utterances.asSequence().shuffled().take(utterancesAtBeginning)
             .toMutableList()
 
         // Create speakers

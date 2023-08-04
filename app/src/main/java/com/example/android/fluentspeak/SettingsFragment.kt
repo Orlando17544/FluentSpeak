@@ -79,10 +79,16 @@ class SettingsFragment : Fragment() {
                 binding.textToSpeechVoiceNameField.error = getString(R.string.text_to_speech_voice_name_error)
                 binding.chatGptMaxTokensField.error = null
                 Snackbar.make(it, R.string.save_preferences_failed_message, Snackbar.LENGTH_SHORT).show()
+            } else if (binding.usernameField.editText?.text.toString().equals("")) {
+                binding.usernameField.error = getString(R.string.username_error)
+            } else if (binding.utterancesAtBeginningField.editText?.text.toString().equals("")) {
+                binding.utterancesAtBeginningField.error = getString(R.string.utterances_at_beginning_error)
             } else {
                 saveValuesToSharedPreferences()
                 binding.chatGptMaxTokensField.error = null
                 binding.textToSpeechVoiceNameField.error = null
+                binding.usernameField.error = null
+                binding.utterancesAtBeginningField.error = null
                 Snackbar.make(it, R.string.save_preferences_successful_message, Snackbar.LENGTH_SHORT).show()
             }
         }
@@ -125,6 +131,14 @@ class SettingsFragment : Fragment() {
             putString(
                 getString(com.example.android.fluentspeak.R.string.text_to_speech_voice_name_key),
                 binding.textToSpeechVoiceNameField.editText?.text.toString()
+            )
+            putString(
+                getString(com.example.android.fluentspeak.R.string.username_key),
+                binding.usernameField.editText?.text.toString()
+            )
+            putInt(
+                getString(com.example.android.fluentspeak.R.string.utterances_at_beginning_key),
+                binding.utterancesAtBeginningField.editText?.text.toString().toInt()
             )
             apply()
         }
@@ -184,6 +198,18 @@ class SettingsFragment : Fragment() {
                 ""
             )
         )
+        binding.usernameField.editText?.setText(
+            sharedPref.getString(
+                getString(R.string.username_key),
+                ""
+            )
+        )
+        binding.utterancesAtBeginningField.editText?.setText(
+            sharedPref.getInt(
+                getString(R.string.utterances_at_beginning_key),
+                0
+            ).toString()
+        )
     }
 
     fun setupHintListeners() {
@@ -232,6 +258,22 @@ class SettingsFragment : Fragment() {
             Toast.makeText(
                 requireContext(),
                 getString(R.string.text_to_speech_voice_name_hint),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        binding.usernameImage.setOnClickListener {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.conversation_settings_username_hint),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        binding.utterancesAtBeginningImage.setOnClickListener {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.conversation_settings_utterances_at_beginning_hint),
                 Toast.LENGTH_LONG
             ).show()
         }
