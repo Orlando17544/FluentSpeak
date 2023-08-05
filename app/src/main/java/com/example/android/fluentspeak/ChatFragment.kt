@@ -948,6 +948,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             }
         }
 
+        val userName = sharedPref.getString(context?.getString(R.string.username_key), "")
+            .toString()
+
+        utterances = utterances.filter { !it.speaker.equals(userName) }.toMutableList()
+
         val utterancesAtBeginning = sharedPref.getInt(
             context?.getString(R.string.utterances_at_beginning_key),
             0
@@ -998,6 +1003,8 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
             }
         }
 
+        var previousSpeakerName = ""
+
         // Add utterances
         for (utterance in utterances) {
             val utteranceFormatted = utterance.speaker + " said: " + utterance.text
@@ -1016,13 +1023,17 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 )
             )
 
-            dialogues += Pair(Input(utterance.speaker + " said: "), null)
+            if (!previousSpeakerName.equals(utterance.speaker)) {
+                dialogues += Pair(Input(utterance.speaker + " said: "), null)
+            }
 
             for (speaker in viewModel.speakers) {
                 if (utterance.speaker.equals(speaker.name)) {
                     dialogues += Pair(Input(utterance.text), speaker.voice)
                 }
             }
+
+            previousSpeakerName = utterance.speaker
         }
 
         viewModel.cleanUnfinishedMessage()
