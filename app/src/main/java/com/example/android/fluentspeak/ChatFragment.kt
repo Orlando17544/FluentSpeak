@@ -191,25 +191,27 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                         viewModel.cleanUnfinishedMessage()
 
                         val lastMessages = viewModel.messages.takeLast(getMessagesToChatGPT())
-                        val messages = listOf(viewModel.systemMessage) + lastMessages
+                        val randomSpeaker = getLessFrequentSpeaker(lastMessages)
+
+                        val messages = listOf(viewModel.systemMessage) + lastMessages + listOf(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), randomSpeaker.name + " said: "))
 
                         val chatCompletionResponse = getChatCompletionResponse(messages)
 
                         val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            chatCompletionResponse.choices[0].message.content
+                            randomSpeaker.name + " said: " + chatCompletionResponse.choices[0].message.content
                         )
 
                         viewModel.addMessages(chatCompletionMessage)
 
                         addMessagesToView(chatCompletionMessage)
 
+                        val dialogues = getDialogues(chatCompletionMessage)
+
                         try {
                             textToSpeech(
-                                Pair(
-                                    Input(chatCompletionMessage.content),
-                                    null
-                                ), updateButtons = { updateButtons(true, false, true, recordIcon = "mic") }
+                                *dialogues,
+                                updateButtons = { updateButtons(true, false, true, recordIcon = "mic") }
                             )
                         } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
@@ -249,7 +251,9 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     viewModel.cleanUnfinishedMessage()
 
                     val lastMessages = viewModel.messages.takeLast(getMessagesToChatGPT())
-                    val messages = listOf(viewModel.systemMessage) + lastMessages
+                    val randomSpeaker = getLessFrequentSpeaker(lastMessages)
+
+                    val messages = listOf(viewModel.systemMessage) + lastMessages + listOf(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), randomSpeaker.name + " said: "))
 
                     disableButtons()
 
@@ -258,19 +262,18 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
-                            chatCompletionResponse.choices[0].message.content
+                            randomSpeaker.name + " said: " + chatCompletionResponse.choices[0].message.content
                         )
 
                         viewModel.addMessages(chatCompletionMessage)
 
                         addMessagesToView(chatCompletionMessage)
 
+                        val dialogues = getDialogues(chatCompletionMessage)
+
                         try {
                             textToSpeech(
-                                Pair(
-                                    Input(chatCompletionMessage.content),
-                                    null
-                                ), updateButtons = { updateButtons(true, false, true) }
+                                *dialogues, updateButtons = { updateButtons(true, false, true) }
                             )
                         } catch (e: HttpException) {
                             Log.e("ChatFragment: ", e.toString())
@@ -739,6 +742,16 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun getSpeakerAndPost(message: Message): Pair<String, String> {
+        val regex1 = Regex("[A-Z][a-z]+(?= said: )")
+        val regex2 = Regex("(?<= said: )(.|\n)+")
+
+        val speakerName = regex1.find(message.content)?.value ?: ""
+        val post = regex2.find(message.content)?.value ?: ""
+
+        return Pair(speakerName, post)
+    }
+
     internal fun addMessagesToView(vararg messages: Message): Int {
 
         var previousSpeakerName = ""
@@ -752,12 +765,10 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
             if (message.role.equals(MESSAGE_ROLE.SYSTEM.toString().lowercase())) {
                 messageView.text = message.content
-            } else {
-                val regex1 = Regex("[A-Z][a-z]+(?= said: )")
-                val regex2 = Regex("(?<= said: )(.|\n)+")
-
-                val speakerName = regex1.find(message.content)?.value
-                val post = regex2.find(message.content)?.value
+            } else if (message.role.equals(MESSAGE_ROLE.USER.toString().lowercase())) {
+                messageView.text = message.content
+            } else if (message.role.equals(MESSAGE_ROLE.ASSISTANT.toString().lowercase())) {
+                val (speakerName, post) = getSpeakerAndPost(message)
 
                 lateinit var textColor: String
 
@@ -825,6 +836,26 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
         val id = (1000..9000).random()
 
         return id
+    }
+
+    private fun getDialogues(message: Message): Array<Pair<Input, Voice?>> {
+        var dialogues = arrayOf<Pair<Input,Voice?>>()
+
+        val (speakerName, post) = getSpeakerAndPost(message)
+
+        dialogues += Pair(Input(speakerName + " said: "), null)
+
+        lateinit var voice: Voice
+
+        for (speaker in viewModel.speakers) {
+            if (speakerName.equals(speaker.name)) {
+                voice = speaker.voice
+            }
+        }
+
+        dialogues += Pair(Input(post), voice)
+
+        return dialogues
     }
 
     private fun getMessagesToChatGPT(): Int {
@@ -916,6 +947,24 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
             viewModel.addSpeaker(speaker)
         }
+    }
+
+    private fun getLessFrequentSpeaker(messages: List<Message>): Speaker {
+        var minFrecuency = 999
+        var lessFrequentSpeakers = mutableListOf<Speaker>()
+        for (speaker in viewModel.speakers) {
+            val frecuency = messages.count { it.content.contains(speaker.name + " said: ") }
+
+            if (frecuency < minFrecuency) {
+                minFrecuency = frecuency
+                lessFrequentSpeakers.clear()
+                lessFrequentSpeakers.add(speaker)
+            } else if (frecuency == minFrecuency) {
+                lessFrequentSpeakers.add(speaker)
+            }
+        }
+
+        return lessFrequentSpeakers.asSequence().shuffled().take(1).toList()[0]
     }
 
     private fun changeSubredditOrConversation() {
