@@ -5,4 +5,8 @@
         android:icon="@drawable/baseline_settings_24"
         android:title="@string/item_settings"
         app:showAsAction="never"/>
+    <item android:id="@+id/item_view_cost"
+        android:icon="@drawable/baseline_attach_money_24"
+        android:title="@string/item_change_conversation"
+        app:showAsAction="ifRoom"/>
 </menu>

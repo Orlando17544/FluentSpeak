@@ -9,4 +9,8 @@
         android:icon="@drawable/baseline_change_circle_24"
         android:title="@string/item_change_conversation"
         app:showAsAction="ifRoom"/>
+    <item android:id="@+id/item_view_cost"
+        android:icon="@drawable/baseline_attach_money_24"
+        android:title="@string/item_change_conversation"
+        app:showAsAction="ifRoom"/>
 </menu>

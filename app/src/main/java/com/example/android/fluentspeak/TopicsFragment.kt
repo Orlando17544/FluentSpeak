@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
@@ -53,11 +54,6 @@ class TopicsFragment : Fragment() {
                 this, viewModelFactory
             ).get(TopicsViewModel::class.java)
 
-        /*
-        viewModel.getSubreddits().observe(viewLifecycleOwner, Observer {
-
-        })*/
-
         viewModel.subreddits.observe(viewLifecycleOwner, Observer {
             val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
                 requireContext(),
@@ -99,8 +95,8 @@ class TopicsFragment : Fragment() {
         topicsAutoCompleteTextView?.setText("")
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
 
         topicsAutoCompleteTextView = null
     }
@@ -117,6 +113,12 @@ class TopicsFragment : Fragment() {
 
                 return item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
             }
+
+            R.id.item_view_cost -> {
+                Toast.makeText(requireContext(), "The cost is: " + Tokenizer.getCostMXN() + " MXN", Toast.LENGTH_LONG).show()
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

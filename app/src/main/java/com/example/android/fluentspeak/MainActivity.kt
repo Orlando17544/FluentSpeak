@@ -59,8 +59,8 @@ class MainActivity : AppCompatActivity() {
             putString(getString(R.string.text_to_speech_voice_name_key), resources.getString(R.string.text_to_speech_voice_name_default_value))
 
             putString(getString(R.string.username_key), resources.getString(R.string.username_default_value))
-
             putInt(getString(R.string.utterances_at_beginning_key), resources.getInteger(R.integer.utterances_at_beginning_default_value))
+            putInt(getString(R.string.last_messages_key), resources.getInteger(R.integer.last_messages_default_value))
 
             putBoolean(getString(R.string.first_start_key), false)
 

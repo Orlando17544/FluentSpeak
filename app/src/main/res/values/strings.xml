@@ -10,11 +10,13 @@
 
     <string name="item_settings">Settings</string>
     <string name="item_change_conversation">Change conversation</string>
+    <string name="item_view_cost">View cost</string>
 
     <string name="max_tokens_hint">Max tokens</string>
 
     <string name="username_hint">Username</string>
     <string name="utterances_at_beginning_hint">Utterances at beginning</string>
+    <string name="last_messages_hint">Last messages</string>
 
     <string name="presence_penalty_hint">Presence penalty</string>
 
@@ -30,13 +32,13 @@
     <string name="chat_gpt_presence_penalty_key">chat_gpt_presence_penalty_key</string>
     <string name="chat_gpt_frecuency_penalty_key">chat_gpt_frecuency_penalty_key</string>
 
-    <string name="utterances_at_beginning_key">utterances_at_beginning_key</string>
-
     <string name="text_to_speech_accent_key">text_to_speech_accent_key</string>
     <string name="text_to_speech_gender_key">text_to_speech_gender_key</string>
     <string name="text_to_speech_voice_name_key">text_to_speech_voice_name_key</string>
 
     <string name="username_key">username_key</string>
+    <string name="utterances_at_beginning_key">utterances_at_beginning_key</string>
+    <string name="last_messages_key">last_messages_key</string>
 
     <string name="first_start_key">first_start_key</string>
 
@@ -51,6 +53,7 @@
 
     <string name="username_error">It can\'t be empty</string>
     <string name="utterances_at_beginning_error">It can\'t be empty</string>
+    <string name="last_messages_error">It can\'t be empty</string>
 
     <string name="whisper_temperature_hint">The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use log probability to automatically increase the temperature until certain thresholds are hit.</string>
 
@@ -65,6 +68,7 @@
 
     <string name="conversation_settings_username_hint">The username to be used in the conversation</string>
     <string name="conversation_settings_utterances_at_beginning_hint">The utterances at the beginning of the conversation</string>
+    <string name="conversation_settings_last_messages_hint">The last messages to take for the conversation</string>
 
     <string name="save_preferences_successful_message">The preferences have been saved</string>
     <string name="save_preferences_failed_message">You have left an empty field</string>

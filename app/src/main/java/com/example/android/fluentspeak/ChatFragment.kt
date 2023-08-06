@@ -15,6 +15,7 @@ import android.util.Log
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -53,7 +54,7 @@ enum class MESSAGE_ROLE {
     SYSTEM, ASSISTANT, USER
 }
 
-class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
+class ChatFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private var recorder: MediaRecorder? = null
     private var translator: MediaRecorder? = null
@@ -195,7 +196,15 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
                         val messages = listOf(viewModel.systemMessage) + lastMessages + listOf(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), randomSpeaker.name + " said: "))
 
+                        Tokenizer.countTokens(messages, Tokenizer.TYPE.INPUT)
                         val chatCompletionResponse = getChatCompletionResponse(messages)
+                        Tokenizer.countTokens(
+                            listOf<Message>(Message(
+                                MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                                chatCompletionResponse.choices[0].message.content
+                            )), Tokenizer.TYPE.OUTPUT
+                        )
+
 
                         val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
@@ -258,7 +267,14 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                     disableButtons()
 
                     lifecycleScope.launch {
+                        Tokenizer.countTokens(messages, Tokenizer.TYPE.INPUT)
                         val chatCompletionResponse = getChatCompletionResponse(messages)
+                        Tokenizer.countTokens(
+                            listOf<Message>(Message(
+                                MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
+                                chatCompletionResponse.choices[0].message.content
+                            )), Tokenizer.TYPE.OUTPUT
+                        )
 
                         val chatCompletionMessage = Message(
                             MESSAGE_ROLE.ASSISTANT.toString().lowercase(),
@@ -485,7 +501,6 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
         textToSpeech?.stop()
         textToSpeech?.shutdown()
-
     }
 
     suspend fun getChatCompletionResponse(messages: List<Message>): ChatCompletionResponse {
@@ -1114,7 +1129,7 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         val inflater: MenuInflater = inflater
-        inflater.inflate(R.menu.conversation_menu, menu)
+        inflater.inflate(R.menu.chat_menu, menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -1125,6 +1140,11 @@ class ConversationFragment : Fragment(), TextToSpeech.OnInitListener {
                 return item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(
                     item
                 )
+            }
+
+            R.id.item_view_cost -> {
+                Toast.makeText(requireContext(), "The cost is: " + Tokenizer.getCostMXN() + " MXN", Toast.LENGTH_LONG).show()
+                true
             }
 
             R.id.item_change_conversation -> {

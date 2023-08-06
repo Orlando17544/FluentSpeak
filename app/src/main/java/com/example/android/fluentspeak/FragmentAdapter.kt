@@ -12,7 +12,7 @@ class FragmentAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
         return when (position) {
             0 -> TopicsFragment()
-            1 -> ConversationFragment()
+            1 -> ChatFragment()
             else -> Fragment()
         }
     }
