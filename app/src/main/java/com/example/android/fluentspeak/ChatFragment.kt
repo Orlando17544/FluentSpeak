@@ -191,7 +191,12 @@ class ChatFragment : Fragment(), TextToSpeech.OnInitListener {
                         )
                         viewModel.cleanUnfinishedMessage()
 
-                        val lastMessages = viewModel.messages.takeLast(getMessagesToChatGPT())
+                        val amountLastMessages = sharedPref.getInt(
+                            context?.getString(R.string.last_messages_key),
+                            0
+                        )
+
+                        val lastMessages = viewModel.messages.takeLast(amountLastMessages)
                         val randomSpeaker = getLessFrequentSpeaker(lastMessages)
 
                         val messages = listOf(viewModel.systemMessage) + lastMessages + listOf(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), randomSpeaker.name + " said: "))
@@ -259,7 +264,12 @@ class ChatFragment : Fragment(), TextToSpeech.OnInitListener {
                     )
                     viewModel.cleanUnfinishedMessage()
 
-                    val lastMessages = viewModel.messages.takeLast(getMessagesToChatGPT())
+                    val amountLastMessages = sharedPref.getInt(
+                        context?.getString(R.string.last_messages_key),
+                        0
+                    )
+
+                    val lastMessages = viewModel.messages.takeLast(amountLastMessages)
                     val randomSpeaker = getLessFrequentSpeaker(lastMessages)
 
                     val messages = listOf(viewModel.systemMessage) + lastMessages + listOf(Message(MESSAGE_ROLE.ASSISTANT.toString().lowercase(), randomSpeaker.name + " said: "))
@@ -871,21 +881,6 @@ class ChatFragment : Fragment(), TextToSpeech.OnInitListener {
         dialogues += Pair(Input(post), voice)
 
         return dialogues
-    }
-
-    private fun getMessagesToChatGPT(): Int {
-
-        val utterancesAtBeginning = sharedPref.getInt(
-            context?.getString(R.string.utterances_at_beginning_key),
-            0
-        )
-        val CONVERSATION_TITLE = 1
-        val STARTER_UTTERANCE = 1
-        val USER_RESPONSE = 1
-        val messagesToChatGPT =
-            utterancesAtBeginning + CONVERSATION_TITLE + STARTER_UTTERANCE + USER_RESPONSE
-
-        return messagesToChatGPT
     }
 
     private fun decodeBase64ToByteArray(encodedBase64: String): ByteArray {
